@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send, Bot, Plus, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ApiKeyInput from "@/components/ApiKeyInput";
 
 interface Message {
   role: "user" | "assistant";
@@ -23,6 +24,10 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [topic, setTopic] = useState("");
   const [chatStarted, setChatStarted] = useState(false);
+  const [apiKey, setApiKey] = useState<string>(() => {
+    // Try to load from localStorage on component mount
+    return localStorage.getItem("openrouter_api_key") || "";
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -33,11 +38,27 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Save API key to localStorage whenever it changes
+    if (apiKey) {
+      localStorage.setItem("openrouter_api_key", apiKey);
+    }
+  }, [apiKey]);
+
   const handleStartChat = () => {
     if (!topic.trim()) {
       toast({
         title: "Please enter a topic",
         description: "A topic is needed to start the AI chat",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenRouter API key first",
         variant: "destructive",
       });
       return;
@@ -54,6 +75,14 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
+    if (!apiKey) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenRouter API key first",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const userMessage: Message = { role: "user", content: inputMessage };
     setMessages(prev => [...prev, userMessage]);
@@ -68,7 +97,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer YOUR_API_KEY" // Should use a proper secret management
+          "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
           model: "qwen/qwen2.5-vl-72b-instruct",
@@ -81,7 +110,9 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get response from AI");
+        const errorData = await response.json();
+        console.error("API Error:", errorData);
+        throw new Error(`Failed to get response from AI: ${response.status} ${errorData?.error?.message || ""}`);
       }
 
       const data = await response.json();
@@ -95,49 +126,110 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       console.error("Error communicating with AI:", error);
       toast({
         title: "Error",
-        description: "Failed to communicate with the AI. Please try again.",
+        description: "Failed to communicate with the AI. Please check your API key and try again.",
         variant: "destructive",
       });
-      
-      // Mock response for development
-      setMessages(prev => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "I'm having trouble connecting to the AI service right now. Please enter your API key or try again later. In the meantime, here's a sample question about your topic:\n\nWhat is the capital of France?\nA) London\nB) Paris\nC) Berlin\nD) Madrid\n\nCorrect answer: B) Paris"
-        }
-      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGenerateQuiz = () => {
-    // Extract questions from the conversation
-    // This is a simplified implementation
-    const sampleQuestions = [
-      {
-        id: "q1",
-        type: "multiple-choice" as const,
-        question: "What is the capital of France?",
-        options: ["London", "Paris", "Berlin", "Madrid"],
-        correctAnswer: 1
-      },
-      {
-        id: "q2",
-        type: "true-false" as const,
-        question: "The Eiffel Tower is located in London.",
-        options: ["True", "False"],
-        correctAnswer: false
-      }
-    ];
+    if (messages.length < 2) {
+      toast({
+        title: "More conversation needed",
+        description: "Please chat with the AI a bit more to generate better quiz questions",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    toast({
-      title: "Quiz Generated",
-      description: `Created ${sampleQuestions.length} questions based on your conversation`,
+    // Extract suitable questions from the conversation
+    const extractedQuestions = parseQuestionsFromMessages(messages);
+    
+    if (extractedQuestions.length > 0) {
+      toast({
+        title: "Quiz Generated",
+        description: `Created ${extractedQuestions.length} questions based on your conversation`,
+      });
+      
+      onGenerateQuestions(extractedQuestions);
+    } else {
+      toast({
+        title: "No questions found",
+        description: "Couldn't extract questions from the conversation. Try asking the AI to create some specific questions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Helper function to try to extract quiz questions from the AI's responses
+  const parseQuestionsFromMessages = (messages: Message[]): any[] => {
+    const assistantMessages = messages.filter(m => m.role === "assistant");
+    const questions: any[] = [];
+    
+    // Very simple parsing logic - this could be improved with more sophisticated parsing
+    assistantMessages.forEach((message, index) => {
+      const content = message.content;
+      
+      // Look for patterns that might indicate multiple choice questions
+      // This is a very simple implementation
+      const mcQuestionMatches = content.match(/(\d+\.\s.*\?)\s*[A-D]\)\s*(.*)\s*[A-D]\)\s*(.*)\s*[A-D]\)\s*(.*)\s*[A-D]\)\s*(.*)/g);
+      
+      if (mcQuestionMatches) {
+        mcQuestionMatches.forEach(match => {
+          const questionMatch = match.match(/(\d+\.\s*)(.*?)(?=\s*A\))/s);
+          const optionsMatch = match.match(/A\)\s*(.*?)\s*B\)\s*(.*?)\s*C\)\s*(.*?)\s*D\)\s*(.*?)(?:\s|$)/s);
+          
+          if (questionMatch && optionsMatch) {
+            questions.push({
+              id: `q${questions.length + 1}`,
+              type: "multiple-choice",
+              question: questionMatch[2].trim(),
+              options: [
+                optionsMatch[1].trim(),
+                optionsMatch[2].trim(), 
+                optionsMatch[3].trim(),
+                optionsMatch[4].trim()
+              ],
+              correctAnswer: 0 // Default to first option
+            });
+          }
+        });
+      }
+      
+      // Look for true/false questions
+      const tfQuestionMatches = content.match(/(\d+\.\s.*\?)\s*(?:True|False)/g);
+      
+      if (tfQuestionMatches) {
+        tfQuestionMatches.forEach(match => {
+          const questionMatch = match.match(/(\d+\.\s*)(.*?)(?=\s*True|False)/s);
+          
+          if (questionMatch) {
+            questions.push({
+              id: `q${questions.length + 1}`,
+              type: "true-false",
+              question: questionMatch[2].trim(),
+              options: ["True", "False"],
+              correctAnswer: false // Default
+            });
+          }
+        });
+      }
     });
     
-    onGenerateQuestions(sampleQuestions);
+    // If we couldn't extract any questions, provide at least one sample
+    if (questions.length === 0 && assistantMessages.length > 0) {
+      questions.push({
+        id: "q1",
+        type: "multiple-choice",
+        question: `Question about ${topic}?`,
+        options: ["Option A", "Option B", "Option C", "Option D"],
+        correctAnswer: 0
+      });
+    }
+    
+    return questions;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -157,13 +249,32 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     setChatStarted(false);
   };
 
+  const handleApiKeySet = (key: string) => {
+    setApiKey(key);
+    toast({
+      title: "API Key Saved",
+      description: "Your OpenRouter API key has been saved",
+    });
+  };
+
   return (
     <Card className="flex flex-col h-full">
       <CardHeader>
         <CardTitle>AI Quiz Creator</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow overflow-auto mb-4">
-        {!chatStarted ? (
+        {!apiKey ? (
+          <div className="space-y-4">
+            <div className="text-center p-6">
+              <Bot className="h-16 w-16 mx-auto mb-4 text-primary" />
+              <h3 className="text-xl font-semibold mb-2">Chat with Qwen AI</h3>
+              <p className="text-muted-foreground mb-4">
+                To use the AI chat feature, you need an OpenRouter API key
+              </p>
+            </div>
+            <ApiKeyInput onApiKeySet={handleApiKeySet} />
+          </div>
+        ) : !chatStarted ? (
           <div className="space-y-4">
             <div className="text-center p-6">
               <Bot className="h-16 w-16 mx-auto mb-4 text-primary" />
@@ -181,6 +292,14 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
               />
               <Button onClick={handleStartChat} className="w-full">
                 Start Chat
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-2"
+                onClick={() => setApiKey("")}
+              >
+                Reset API Key
               </Button>
             </div>
           </div>

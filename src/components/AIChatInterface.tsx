@@ -305,6 +305,9 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
             <option value="es">Español</option>
             <option value="fr">Français</option>
             <option value="de">Deutsch</option>
+            <option value="ar">العربية</option>
+            <option value="ro">Română</option>
+            <option value="he">עברית</option>
           </select>
         </div>
       </CardHeader>
@@ -427,151 +430,226 @@ const getLocalizedText = (key: string, language: string): string => {
       en: "AI Quiz Creator",
       es: "Creador de Cuestionarios IA",
       fr: "Créateur de Quiz IA",
-      de: "KI-Quiz-Ersteller"
+      de: "KI-Quiz-Ersteller",
+      ar: "منشئ الاختبارات بالذكاء الاصطناعي",
+      ro: "Creator de Quiz AI",
+      he: "יוצר חידונים בינה מלאכותית"
     },
     chatWithAI: {
       en: "Chat with Qwen AI",
       es: "Chatear con Qwen IA",
       fr: "Discuter avec Qwen IA",
-      de: "Mit Qwen KI chatten"
+      de: "Mit Qwen KI chatten",
+      ar: "الدردشة مع Qwen AI",
+      ro: "Discută cu Qwen AI",
+      he: "שוחח עם בינה מלאכותית Qwen"
     },
     apiKeyNeeded: {
       en: "To use the AI chat feature, you need an OpenRouter API key",
       es: "Para usar la función de chat con IA, necesitas una clave API de OpenRouter",
       fr: "Pour utiliser la fonction de chat IA, vous avez besoin d'une clé API OpenRouter",
-      de: "Um die KI-Chat-Funktion zu nutzen, benötigen Sie einen OpenRouter-API-Schlüssel"
+      de: "Um die KI-Chat-Funktion zu nutzen, benötigen Sie einen OpenRouter-API-Schlüssel",
+      ar: "لاستخدام ميزة الدردشة مع الذكاء الاصطناعي، تحتاج إلى مفتاح OpenRouter API",
+      ro: "Pentru a utiliza funcția de chat AI, aveți nevoie de o cheie API OpenRouter",
+      he: "כדי להשתמש בתכונת הצ'אט עם בינה מלאכותית, אתה צריך מפתח API של OpenRouter"
     },
     startByEnteringTopic: {
       en: "Start by entering a topic, then chat with the AI to create customized quiz questions.",
       es: "Comienza ingresando un tema, luego chatea con la IA para crear preguntas personalizadas.",
       fr: "Commencez par saisir un sujet, puis discutez avec l'IA pour créer des questions de quiz personnalisées.",
-      de: "Beginnen Sie mit der Eingabe eines Themas und chatten Sie dann mit der KI, um personalisierte Quizfragen zu erstellen."
+      de: "Beginnen Sie mit der Eingabe eines Themas und chatten Sie dann mit der KI, um personalisierte Quizfragen zu erstellen.",
+      ar: "ابدأ بإدخال موضوع، ثم تحدث مع الذكاء الاصطناعي لإنشاء أسئلة اختبار مخصصة.",
+      ro: "Începeți prin introducerea unui subiect, apoi discutați cu AI pentru a crea întrebări personalizate de quiz.",
+      he: "התחל על ידי הזנת נושא, ואז שוחח עם הבינה המלאכותית ליצירת שאלות חידון מותאמות אישית."
     },
     enterTopicPlaceholder: {
       en: "Enter topic (e.g. World Geography, History, Science)",
       es: "Introduce un tema (ej. Geografía Mundial, Historia, Ciencia)",
       fr: "Entrez un sujet (ex. Géographie mondiale, Histoire, Science)",
-      de: "Thema eingeben (z.B. Weltgeografie, Geschichte, Wissenschaft)"
+      de: "Thema eingeben (z.B. Weltgeografie, Geschichte, Wissenschaft)",
+      ar: "أدخل الموضوع (مثل الجغرافيا العالمية، التاريخ، العلوم)",
+      ro: "Introduceți subiectul (ex. Geografie Mondială, Istorie, Știință)",
+      he: "הזן נושא (למשל גיאוגרפיה עולמית, היסטוריה, מדע)"
     },
     startChat: {
       en: "Start Chat",
       es: "Iniciar Chat",
       fr: "Démarrer la Discussion",
-      de: "Chat starten"
+      de: "Chat starten",
+      ar: "بدء الدردشة",
+      ro: "Începe Discuția",
+      he: "התחל צ'אט"
     },
     resetApiKey: {
       en: "Reset API Key",
       es: "Reiniciar Clave API",
       fr: "Réinitialiser la Clé API",
-      de: "API-Schlüssel zurücksetzen"
+      de: "API-Schlüssel zurücksetzen",
+      ar: "إعادة تعيين مفتاح API",
+      ro: "Resetează Cheia API",
+      he: "אפס מפתח API"
     },
     typeYourMessage: {
       en: "Type your message...",
       es: "Escribe tu mensaje...",
       fr: "Tapez votre message...",
-      de: "Geben Sie Ihre Nachricht ein..."
+      de: "Geben Sie Ihre Nachricht ein...",
+      ar: "اكتب رسالتك...",
+      ro: "Scrieți mesajul dvs...",
+      he: "הקלד את ההודעה שלך..."
     },
     reset: {
       en: "Reset",
       es: "Reiniciar",
       fr: "Réinitialiser",
-      de: "Zurücksetzen"
+      de: "Zurücksetzen",
+      ar: "إعادة تعيين",
+      ro: "Resetează",
+      he: "אפס"
     },
     createQuiz: {
       en: "Create Quiz",
       es: "Crear Cuestionario",
       fr: "Créer Quiz",
-      de: "Quiz erstellen"
+      de: "Quiz erstellen",
+      ar: "إنشاء اختبار",
+      ro: "Creează Quiz",
+      he: "צור חידון"
     },
     pleaseEnterTopic: {
       en: "Please enter a topic",
       es: "Por favor ingresa un tema",
       fr: "Veuillez entrer un sujet",
-      de: "Bitte geben Sie ein Thema ein"
+      de: "Bitte geben Sie ein Thema ein",
+      ar: "الرجاء إدخال موضوع",
+      ro: "Vă rugăm să introduceți un subiect",
+      he: "אנא הזן נושא"
     },
     topicNeeded: {
       en: "A topic is needed to start the AI chat",
       es: "Se necesita un tema para iniciar el chat con IA",
       fr: "Un sujet est nécessaire pour démarrer le chat IA",
-      de: "Ein Thema wird benötigt, um den KI-Chat zu starten"
+      de: "Ein Thema wird benötigt, um den KI-Chat zu starten",
+      ar: "موضوع مطلوب لبدء الدردشة مع الذكاء الاصطناعي",
+      ro: "Un subiect este necesar pentru a începe discuția cu AI",
+      he: "נדרש נושא כדי להתחיל את הצ'אט עם הבינה המלאכותית"
     },
     apiKeyRequired: {
       en: "API Key Required",
       es: "Se Requiere Clave API",
       fr: "Clé API Requise",
-      de: "API-Schlüssel erforderlich"
+      de: "API-Schlüssel erforderlich",
+      ar: "مفتاح API مطلوب",
+      ro: "Cheie API necesară",
+      he: "נדרש מפתח API"
     },
     enterApiKey: {
       en: "Please enter your OpenRouter API key first",
       es: "Por favor, introduce primero tu clave API de OpenRouter",
       fr: "Veuillez d'abord saisir votre clé API OpenRouter",
-      de: "Bitte geben Sie zuerst Ihren OpenRouter-API-Schlüssel ein"
+      de: "Bitte geben Sie zuerst Ihren OpenRouter-API-Schlüssel ein",
+      ar: "الرجاء إدخال مفتاح OpenRouter API الخاص بك أولاً",
+      ro: "Vă rugăm să introduceți mai întâi cheia API OpenRouter",
+      he: "אנא הזן תחילה את מפתח ה-API של OpenRouter"
     },
     welcomeMessage: {
       en: "I'll help you create quiz questions about \"{topic}\". What kind of questions would you like to create? You can ask for multiple-choice, true/false, fill-in-the-blank, or other question types.",
       es: "Te ayudaré a crear preguntas de cuestionario sobre \"{topic}\". ¿Qué tipo de preguntas te gustaría crear? Puedes pedir preguntas de opción múltiple, verdadero/falso, completar espacios en blanco u otros tipos.",
       fr: "Je vais vous aider à créer des questions de quiz sur \"{topic}\". Quel type de questions souhaitez-vous créer ? Vous pouvez demander des QCM, vrai/faux, texte à trous, ou d'autres types de questions.",
-      de: "Ich helfe Ihnen, Quizfragen zu \"{topic}\" zu erstellen. Welche Art von Fragen möchten Sie erstellen? Sie können Multiple-Choice, Wahr/Falsch, Lückentexte oder andere Fragetypen anfordern."
+      de: "Ich helfe Ihnen, Quizfragen zu \"{topic}\" zu erstellen. Welche Art von Fragen möchten Sie erstellen? Sie können Multiple-Choice, Wahr/Falsch, Lückentexte oder andere Fragetypen anfordern.",
+      ar: "سأساعدك في إنشاء أسئلة اختبار حول \"{topic}\". ما نوع الأسئلة التي ترغب في إنشائها؟ يمكنك طلب أسئلة متعددة الخيارات، صح/خطأ، ملء الفراغات، أو أنواع أخرى.",
+      ro: "Te voi ajuta să creezi întrebări de quiz despre \"{topic}\". Ce tip de întrebări ai dori să creezi? Poți cere întrebări cu variante multiple, adevărat/fals, completare de spații goale sau alte tipuri.",
+      he: "אני אעזור לך ליצור שאלות חידון על \"{topic}\". איזה סוג של שאלות תרצה ליצור? אתה יכול לבקש שאלות רב-ברירה, נכון/לא נכון, השלמת מילים, או סוגי שאלות אחרים."
     },
     error: {
       en: "Error",
       es: "Error",
       fr: "Erreur",
-      de: "Fehler"
+      de: "Fehler",
+      ar: "خطأ",
+      ro: "Eroare",
+      he: "שגיאה"
     },
     communicationError: {
       en: "Failed to communicate with the AI. Please check your API key and try again.",
       es: "No se pudo comunicar con la IA. Por favor, verifica tu clave API e intenta de nuevo.",
       fr: "Échec de la communication avec l'IA. Veuillez vérifier votre clé API et réessayer.",
-      de: "Kommunikation mit der KI fehlgeschlagen. Bitte überprüfen Sie Ihren API-Schlüssel und versuchen Sie es erneut."
+      de: "Kommunikation mit der KI fehlgeschlagen. Bitte überprüfen Sie Ihren API-Schlüssel und versuchen Sie es erneut.",
+      ar: "فشل في التواصل مع الذكاء الاصطناعي. يرجى التحقق من مفتاح API الخاص بك والمحاولة مرة أخرى.",
+      ro: "Comunicarea cu AI a eșuat. Vă rugăm să verificați cheia API și să încercați din nou.",
+      he: "נכשל בתקשורת עם הבינה המלאכותית. אנא בדוק את מפתח ה-API שלך ונסה שוב."
     },
     moreConversationNeeded: {
       en: "More conversation needed",
       es: "Se necesita más conversación",
       fr: "Plus de conversation nécessaire",
-      de: "Mehr Konversation benötigt"
+      de: "Mehr Konversation benötigt",
+      ar: "مطلوب المزيد من المحادثة",
+      ro: "Este necesară mai multă conversație",
+      he: "נדרשת שיחה נוספת"
     },
     chatMore: {
       en: "Please chat with the AI a bit more to generate better quiz questions",
       es: "Por favor, chatea un poco más con la IA para generar mejores preguntas",
       fr: "Veuillez discuter un peu plus avec l'IA pour générer de meilleures questions",
-      de: "Bitte chatten Sie etwas mehr mit der KI, um bessere Quizfragen zu generieren"
+      de: "Bitte chatten Sie etwas mehr mit der KI, um bessere Quizfragen zu generieren",
+      ar: "يرجى الدردشة مع الذكاء الاصطناعي قليلاً أكثر لإنشاء أسئلة اختبار أفضل",
+      ro: "Vă rugăm să discutați mai mult cu AI pentru a genera întrebări de quiz mai bune",
+      he: "אנא שוחח עם הבינה המלאכותית קצת יותר כדי ליצור שאלות חידון טובות יותר"
     },
     quizGenerated: {
       en: "Quiz Generated",
       es: "Cuestionario Generado",
       fr: "Quiz Généré",
-      de: "Quiz Erstellt"
+      de: "Quiz Erstellt",
+      ar: "تم إنشاء الاختبار",
+      ro: "Quiz Generat",
+      he: "החידון נוצר"
     },
     createdQuestions: {
       en: "Created {count} questions based on your conversation",
       es: "Se crearon {count} preguntas basadas en tu conversación",
       fr: "Création de {count} questions basées sur votre conversation",
-      de: "{count} Fragen wurden basierend auf Ihrem Gespräch erstellt"
+      de: "{count} Fragen wurden basierend auf Ihrem Gespräch erstellt",
+      ar: "تم إنشاء {count} أسئلة بناءً على محادثتك",
+      ro: "S-au creat {count} întrebări bazate pe conversația dvs",
+      he: "נוצרו {count} שאלות בהתבסס על השיחה שלך"
     },
     noQuestionsFound: {
       en: "No questions found",
       es: "No se encontraron preguntas",
       fr: "Aucune question trouvée",
-      de: "Keine Fragen gefunden"
+      de: "Keine Fragen gefunden",
+      ar: "لم يتم العثور على أسئلة",
+      ro: "Nu s-au găsit întrebări",
+      he: "לא נמצאו שאלות"
     },
     couldntExtract: {
       en: "Couldn't extract questions from the conversation. Try asking the AI to create some specific questions.",
       es: "No se pudieron extraer preguntas de la conversación. Intenta pedirle a la IA que cree algunas preguntas específicas.",
       fr: "Impossible d'extraire des questions de la conversation. Essayez de demander à l'IA de créer des questions spécifiques.",
-      de: "Aus dem Gespräch konnten keine Fragen extrahiert werden. Bitten Sie die KI, einige spezifische Fragen zu erstellen."
+      de: "Aus dem Gespräch konnten keine Fragen extrahiert werden. Bitten Sie die KI, einige spezifische Fragen zu erstellen.",
+      ar: "تعذر استخراج الأسئلة من المحادثة. حاول أن تطلب من الذكاء الاصطناعي إنشاء بعض الأسئلة المحددة.",
+      ro: "Nu s-au putut extrage întrebări din conversație. Încercați să cereți AI-ului să creeze câteva întrebări specifice.",
+      he: "לא ניתן היה לחלץ שאלות מהשיחה. נסה לבקש מהבינה המלאכותית ליצור כמה שאלות ספציפיות."
     },
     apiKeySaved: {
       en: "API Key Saved",
       es: "Clave API Guardada",
       fr: "Clé API Enregistrée",
-      de: "API-Schlüssel Gespeichert"
+      de: "API-Schlüssel Gespeichert",
+      ar: "تم حفظ مفتاح API",
+      ro: "Cheie API Salvată",
+      he: "מפתח API נשמר"
     },
     apiKeySavedDesc: {
       en: "Your OpenRouter API key has been saved",
       es: "Tu clave API de OpenRouter ha sido guardada",
       fr: "Votre clé API OpenRouter a été enregistrée",
-      de: "Ihr OpenRouter-API-Schlüssel wurde gespeichert"
+      de: "Ihr OpenRouter-API-Schlüssel wurde gespeichert",
+      ar: "تم حفظ مفتاح OpenRouter API الخاص بك",
+      ro: "Cheia dvs. API OpenRouter a fost salvată",
+      he: "מפתח ה-API של OpenRouter שלך נשמר"
     }
   };
 

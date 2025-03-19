@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -28,14 +27,16 @@ import {
   Trash2, 
   Save, 
   Upload, 
-  FileUp, 
   Sparkles, 
-  Edit, 
   CheckCircle,
   AlertCircle,
-  Image as ImageIcon 
+  ImageIcon,
+  MessageSquare 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AIChatInterface from "@/components/AIChatInterface";
+import ApiKeyInput from "@/components/ApiKeyInput";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface QuizQuestion {
   id: string;
@@ -66,6 +67,10 @@ const CreateQuiz = () => {
     }
   ]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  
+  // AI integration
+  const [apiKey, setApiKey] = useState("");
+  const [aiMode, setAiMode] = useState<'chat' | 'generate'>('generate');
   
   // Add a new question
   const addQuestion = () => {
@@ -191,47 +196,54 @@ const CreateQuiz = () => {
     });
   };
   
-  // Generate questions with AI (mock functionality)
+  // Generate questions with AI
   const generateWithAI = () => {
-    toast({
-      title: "AI generation initiated",
-      description: "Generating questions based on your topic...",
-    });
-    
-    // This would be replaced with actual AI generation call
-    setTimeout(() => {
-      const newQuestions = [
-        {
-          id: "q1",
-          type: "multiple-choice" as const,
-          question: "What is the capital of France?",
-          options: ["Paris", "London", "Berlin", "Madrid"],
-          correctAnswer: 0
-        },
-        {
-          id: "q2",
-          type: "true-false" as const,
-          question: "The Pacific Ocean is the largest ocean on Earth.",
-          options: ["True", "False"],
-          correctAnswer: true
-        },
-        {
-          id: "q3",
-          type: "multiple-choice" as const,
-          question: "Which planet is known as the Red Planet?",
-          options: ["Mars", "Venus", "Jupiter", "Mercury"],
-          correctAnswer: 0
-        }
-      ];
-      
-      setQuestions(newQuestions);
-      setCurrentQuestionIndex(0);
-      
+    if (aiMode === 'chat') {
       toast({
-        title: "Questions generated!",
-        description: `Successfully generated ${newQuestions.length} questions.`,
+        title: "AI Chat Mode",
+        description: "Switch to the AI Chat tab to create questions by chatting with the AI",
       });
-    }, 2000);
+    } else {
+      toast({
+        title: "AI generation initiated",
+        description: "Generating questions based on your topic...",
+      });
+      
+      // This would be replaced with actual AI generation call
+      setTimeout(() => {
+        const newQuestions = [
+          {
+            id: "q1",
+            type: "multiple-choice" as const,
+            question: "What is the capital of France?",
+            options: ["Paris", "London", "Berlin", "Madrid"],
+            correctAnswer: 0
+          },
+          {
+            id: "q2",
+            type: "true-false" as const,
+            question: "The Pacific Ocean is the largest ocean on Earth.",
+            options: ["True", "False"],
+            correctAnswer: true
+          },
+          {
+            id: "q3",
+            type: "multiple-choice" as const,
+            question: "Which planet is known as the Red Planet?",
+            options: ["Mars", "Venus", "Jupiter", "Mercury"],
+            correctAnswer: 0
+          }
+        ];
+        
+        setQuestions(newQuestions);
+        setCurrentQuestionIndex(0);
+        
+        toast({
+          title: "Questions generated!",
+          description: `Successfully generated ${newQuestions.length} questions.`,
+        });
+      }, 2000);
+    }
   };
   
   // Import questions from file (mock functionality)
@@ -240,6 +252,14 @@ const CreateQuiz = () => {
       title: "Coming Soon",
       description: "File import functionality will be available in a future update.",
     });
+  };
+  
+  // Handle questions generated from AI chat
+  const handleAIGeneratedQuestions = (generatedQuestions: QuizQuestion[]) => {
+    if (generatedQuestions.length > 0) {
+      setQuestions(generatedQuestions);
+      setCurrentQuestionIndex(0);
+    }
   };
   
   // Current question being edited
@@ -320,159 +340,188 @@ const CreateQuiz = () => {
               </CardContent>
             </Card>
             
-            {/* Question editor */}
-            <Card>
-              <CardHeader className="flex-row items-center justify-between space-y-0">
-                <div>
-                  <CardTitle>Question {currentQuestionIndex + 1}</CardTitle>
-                  <CardDescription>
-                    {questions.length} question{questions.length !== 1 ? "s" : ""} total
-                  </CardDescription>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Select 
-                    value={currentQuestion.type} 
-                    onValueChange={(value: any) => updateQuestion("type", value)}
-                  >
-                    <SelectTrigger className="w-auto">
-                      <SelectValue placeholder="Question Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
-                      <SelectItem value="true-false">True/False</SelectItem>
-                      <SelectItem value="fill-blank">Fill in the Blank</SelectItem>
-                      <SelectItem value="image">Image Based</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => deleteQuestion(currentQuestionIndex)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
+            <Tabs defaultValue="manual" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="manual">Manual Editor</TabsTrigger>
+                <TabsTrigger value="ai-chat">AI Chat</TabsTrigger>
+              </TabsList>
               
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="question">Question</Label>
-                  <Textarea
-                    id="question"
-                    placeholder="Enter your question here"
-                    value={currentQuestion.question}
-                    onChange={(e) => updateQuestion("question", e.target.value)}
-                  />
-                </div>
-                
-                {currentQuestion.type === "image" && (
-                  <div className="rounded-lg border border-dashed p-4">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <ImageIcon className="mb-2 h-8 w-8 text-muted-foreground" />
-                      <p className="mb-2 text-sm text-muted-foreground">
-                        Drag and drop an image, or click to select
-                      </p>
-                      <Button variant="outline" size="sm">
-                        Select Image
+              <TabsContent value="manual">
+                {/* Question editor */}
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between space-y-0">
+                    <div>
+                      <CardTitle>Question {currentQuestionIndex + 1}</CardTitle>
+                      <CardDescription>
+                        {questions.length} question{questions.length !== 1 ? "s" : ""} total
+                      </CardDescription>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <Select 
+                        value={currentQuestion.type} 
+                        onValueChange={(value: any) => updateQuestion("type", value)}
+                      >
+                        <SelectTrigger className="w-auto">
+                          <SelectValue placeholder="Question Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+                          <SelectItem value="true-false">True/False</SelectItem>
+                          <SelectItem value="fill-blank">Fill in the Blank</SelectItem>
+                          <SelectItem value="image">Image Based</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => deleteQuestion(currentQuestionIndex)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                )}
-                
-                {(currentQuestion.type === "multiple-choice" || currentQuestion.type === "image") && (
-                  <div className="space-y-4">
-                    <Label>Options</Label>
-                    <RadioGroup 
-                      value={currentQuestion.correctAnswer.toString()}
-                      onValueChange={(value) => updateQuestion("correctAnswer", parseInt(value))}
-                    >
-                      {currentQuestion.options.map((option, index) => (
-                        <div key={index} className="flex items-center space-x-3">
-                          <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                          <Input
-                            placeholder={`Option ${index + 1}`}
-                            value={option}
-                            onChange={(e) => updateOption(index, e.target.value)}
-                            className="flex-grow"
-                          />
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="question">Question</Label>
+                      <Textarea
+                        id="question"
+                        placeholder="Enter your question here"
+                        value={currentQuestion.question}
+                        onChange={(e) => updateQuestion("question", e.target.value)}
+                      />
+                    </div>
+                    
+                    {currentQuestion.type === "image" && (
+                      <div className="rounded-lg border border-dashed p-4">
+                        <div className="flex flex-col items-center justify-center text-center">
+                          <ImageIcon className="mb-2 h-8 w-8 text-muted-foreground" />
+                          <p className="mb-2 text-sm text-muted-foreground">
+                            Drag and drop an image, or click to select
+                          </p>
+                          <Button variant="outline" size="sm">
+                            Select Image
+                          </Button>
                         </div>
+                      </div>
+                    )}
+                    
+                    {(currentQuestion.type === "multiple-choice" || currentQuestion.type === "image") && (
+                      <div className="space-y-4">
+                        <Label>Options</Label>
+                        <RadioGroup 
+                          value={currentQuestion.correctAnswer.toString()}
+                          onValueChange={(value) => updateQuestion("correctAnswer", parseInt(value))}
+                        >
+                          {currentQuestion.options.map((option, index) => (
+                            <div key={index} className="flex items-center space-x-3">
+                              <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                              <Input
+                                placeholder={`Option ${index + 1}`}
+                                value={option}
+                                onChange={(e) => updateOption(index, e.target.value)}
+                                className="flex-grow"
+                              />
+                            </div>
+                          ))}
+                        </RadioGroup>
+                        <p className="text-sm text-muted-foreground">
+                          Select the radio button next to the correct answer
+                        </p>
+                      </div>
+                    )}
+                    
+                    {currentQuestion.type === "true-false" && (
+                      <div className="space-y-4">
+                        <Label>Correct Answer</Label>
+                        <RadioGroup 
+                          value={currentQuestion.correctAnswer ? "true" : "false"}
+                          onValueChange={(value) => updateQuestion("correctAnswer", value === "true")}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="true" id="answer-true" />
+                            <Label htmlFor="answer-true">True</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="false" id="answer-false" />
+                            <Label htmlFor="answer-false">False</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    )}
+                    
+                    {currentQuestion.type === "fill-blank" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="correct-answer">Correct Answer</Label>
+                        <Input
+                          id="correct-answer"
+                          placeholder="Enter the correct answer"
+                          value={currentQuestion.correctAnswer as string}
+                          onChange={(e) => updateQuestion("correctAnswer", e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                  
+                  <CardFooter className="justify-between">
+                    <div className="flex space-x-1">
+                      {questions.map((_, index) => (
+                        <Button
+                          key={index}
+                          variant={index === currentQuestionIndex ? "default" : "outline"}
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setCurrentQuestionIndex(index)}
+                        >
+                          {index + 1}
+                        </Button>
                       ))}
-                    </RadioGroup>
-                    <p className="text-sm text-muted-foreground">
-                      Select the radio button next to the correct answer
-                    </p>
-                  </div>
-                )}
-                
-                {currentQuestion.type === "true-false" && (
-                  <div className="space-y-4">
-                    <Label>Correct Answer</Label>
-                    <RadioGroup 
-                      value={currentQuestion.correctAnswer ? "true" : "false"}
-                      onValueChange={(value) => updateQuestion("correctAnswer", value === "true")}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="true" id="answer-true" />
-                        <Label htmlFor="answer-true">True</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="false" id="answer-false" />
-                        <Label htmlFor="answer-false">False</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                )}
-                
-                {currentQuestion.type === "fill-blank" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="correct-answer">Correct Answer</Label>
-                    <Input
-                      id="correct-answer"
-                      placeholder="Enter the correct answer"
-                      value={currentQuestion.correctAnswer as string}
-                      onChange={(e) => updateQuestion("correctAnswer", e.target.value)}
-                    />
-                  </div>
-                )}
-              </CardContent>
-              
-              <CardFooter className="justify-between">
-                <div className="flex space-x-1">
-                  {questions.map((_, index) => (
-                    <Button
-                      key={index}
-                      variant={index === currentQuestionIndex ? "default" : "outline"}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={addQuestion}
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
                       size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => setCurrentQuestionIndex(index)}
+                      onClick={() => {
+                        const nextIndex = (currentQuestionIndex + 1) % questions.length;
+                        setCurrentQuestionIndex(nextIndex);
+                      }}
                     >
-                      {index + 1}
+                      Next Question
                     </Button>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={addQuestion}
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="ai-chat">
+                <div className="space-y-4">
+                  {!apiKey && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>OpenRouter API Key</CardTitle>
+                        <CardDescription>
+                          To use the AI chat feature, you need an OpenRouter API key
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ApiKeyInput onApiKeySet={setApiKey} />
+                      </CardContent>
+                    </Card>
+                  )}
+                  
+                  <AIChatInterface onGenerateQuestions={handleAIGeneratedQuestions} />
                 </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    const nextIndex = (currentQuestionIndex + 1) % questions.length;
-                    setCurrentQuestionIndex(nextIndex);
-                  }}
-                >
-                  Next Question
-                </Button>
-              </CardFooter>
-            </Card>
+              </TabsContent>
+            </Tabs>
           </div>
           
           {/* Sidebar */}
@@ -491,6 +540,23 @@ const CreateQuiz = () => {
                 <Button variant="outline" className="w-full" onClick={importQuestions}>
                   <Upload className="mr-2 h-4 w-4" />
                   Import Questions
+                </Button>
+                
+                <Button 
+                  variant="secondary" 
+                  className="w-full" 
+                  onClick={() => {
+                    setAiMode('chat');
+                    const aiChatTab = document.querySelector('[data-value="ai-chat"]') as HTMLElement;
+                    if (aiChatTab) {
+                      aiChatTab.click();
+                    } else {
+                      generateWithAI();
+                    }
+                  }}
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Chat with AI
                 </Button>
                 
                 <Button variant="secondary" className="w-full" onClick={generateWithAI}>
@@ -526,6 +592,27 @@ const CreateQuiz = () => {
                 </ul>
               </CardContent>
             </Card>
+            
+            {apiKey && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Integration</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    You can use the Qwen AI model to help you create quiz questions by chatting with it.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setApiKey("")}
+                  >
+                    Reset API Key
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

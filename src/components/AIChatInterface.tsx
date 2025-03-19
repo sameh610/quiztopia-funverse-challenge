@@ -55,7 +55,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
-    const userMessage = { role: "user", content: inputMessage };
+    const userMessage: Message = { role: "user", content: inputMessage };
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
@@ -85,7 +85,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       }
 
       const data = await response.json();
-      const assistantMessage = { 
+      const assistantMessage: Message = { 
         role: "assistant", 
         content: data.choices[0].message.content 
       };

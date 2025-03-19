@@ -113,7 +113,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
           "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "qwen/qwen2.5-vl-72b-instruct",
+          model: "qwen/qwen2.5-vl-72b-instruct:free",
           messages: chatHistory.map(msg => ({
             role: msg.role,
             content: msg.content

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { 
   Gamepad, 
   Swords, 
-  UserGroup, 
+  Users, 
   Code, 
   Car, 
   Store 
@@ -142,7 +142,7 @@ const GameModesSection = () => {
     all: <Gamepad className="mr-2 h-4 w-4" />,
     classic: <Gamepad className="mr-2 h-4 w-4" />,
     strategy: <Swords className="mr-2 h-4 w-4" />,
-    competitive: <UserGroup className="mr-2 h-4 w-4" />,
+    competitive: <Users className="mr-2 h-4 w-4" />,
     coding: <Code className="mr-2 h-4 w-4" />,
     racing: <Car className="mr-2 h-4 w-4" />,
     economy: <Store className="mr-2 h-4 w-4" />

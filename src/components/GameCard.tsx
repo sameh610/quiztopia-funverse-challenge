@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { 
-  GameController, 
+  Gamepad, 
   Timer, 
   Sword, 
   Skull, 
@@ -20,8 +20,8 @@ import {
   Car,
   Rocket,
   Plane,
-  Maze,
-  Planet,
+  Map as MapIcon,
+  Globe,
   Train
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,7 @@ interface GameCardProps {
 const GameCard = ({ game }: GameCardProps) => {
   // Map of icon names to Lucide icon components
   const iconMap: Record<string, React.ReactNode> = {
-    'gamepad': <GameController className="h-6 w-6" />,
+    'gamepad': <Gamepad className="h-6 w-6" />,
     'timer': <Timer className="h-6 w-6" />,
     'sword': <Sword className="h-6 w-6" />,
     'skull': <Skull className="h-6 w-6" />,
@@ -63,8 +63,8 @@ const GameCard = ({ game }: GameCardProps) => {
     'car': <Car className="h-6 w-6" />,
     'rocket': <Rocket className="h-6 w-6" />,
     'plane': <Plane className="h-6 w-6" />,
-    'maze': <Maze className="h-6 w-6" />,
-    'planet': <Planet className="h-6 w-6" />,
+    'maze': <MapIcon className="h-6 w-6" />,
+    'planet': <Globe className="h-6 w-6" />,
     'train': <Train className="h-6 w-6" />
   };
 
@@ -97,7 +97,7 @@ const GameCard = ({ game }: GameCardProps) => {
       <div className="flex h-full flex-col p-5">
         <div className="mb-4 flex items-start justify-between">
           <div className="game-icon">
-            {iconMap[game.icon] || <GameController className="h-6 w-6" />}
+            {iconMap[game.icon] || <Gamepad className="h-6 w-6" />}
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className={difficultyColorMap[game.difficulty]}>

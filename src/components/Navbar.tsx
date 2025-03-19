@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Trophy, 
-  GameController, 
+  Gamepad, 
   Plus, 
   Home, 
   User, 
@@ -38,7 +38,7 @@ const Navbar = () => {
       <div className="flex h-full flex-col bg-background">
         <div className="flex items-center justify-between p-4">
           <Link to="/" className="flex items-center space-x-2" onClick={toggleMenu}>
-            <GameController className="h-8 w-8 text-quiztopia-primary" />
+            <Gamepad className="h-8 w-8 text-quiztopia-primary" />
             <span className="text-xl font-bold text-gradient">QuizTopia</span>
           </Link>
           <button onClick={toggleMenu} className="p-2">
@@ -51,7 +51,7 @@ const Navbar = () => {
             <span>Home</span>
           </Link>
           <Link to="/games" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
-            <GameController className="h-5 w-5" />
+            <Gamepad className="h-5 w-5" />
             <span>Games</span>
           </Link>
           <Link to="/leaderboards" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
@@ -85,7 +85,7 @@ const Navbar = () => {
     <nav className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center space-x-2">
-          <GameController className="h-8 w-8 text-quiztopia-primary" />
+          <Gamepad className="h-8 w-8 text-quiztopia-primary" />
           <span className="text-xl font-bold text-gradient">QuizTopia</span>
         </Link>
         

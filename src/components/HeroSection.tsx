@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { GameController, BookOpen, Users, Zap, ArrowRight } from "lucide-react";
+import { Gamepad, BookOpen, Users, Zap, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -59,7 +59,7 @@ const HeroSection = () => {
               </Link>
               <Link to="/games">
                 <Button size="lg" variant="outline" className="rounded-xl">
-                  Browse Games <GameController className="ml-2 h-5 w-5" />
+                  Browse Games <Gamepad className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             </div>
@@ -92,7 +92,7 @@ const HeroSection = () => {
                 <div className="space-y-4">
                   {[
                     { 
-                      icon: <GameController className="h-5 w-5" />, 
+                      icon: <Gamepad className="h-5 w-5" />, 
                       title: "Classic Quiz Battle", 
                       description: "Answer quickly to score the most points!" 
                     },

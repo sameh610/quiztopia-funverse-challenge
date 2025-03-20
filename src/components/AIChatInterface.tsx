@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,15 @@ interface AIChatInterfaceProps {
   onGenerateQuestions: (questions: any[]) => void;
 }
 
+interface QuizQuestion {
+  id: string;
+  type: "multiple-choice" | "true-false" | "fill-blank" | "image";
+  question: string;
+  options: string[];
+  correctAnswer: number | boolean | string;
+  image?: string;
+}
+
 const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -25,13 +33,13 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   const [topic, setTopic] = useState("");
   const [chatStarted, setChatStarted] = useState(false);
   const [apiKey, setApiKey] = useState<string>(() => {
-    // Try to load from localStorage on component mount
     return localStorage.getItem("openrouter_api_key") || "";
   });
   const [language, setLanguage] = useState<string>(() => {
     return localStorage.getItem("quiz_language") || "en";
   });
-  const [lastExtractedQuestions, setLastExtractedQuestions] = useState<any[]>([]);
+  const [lastExtractedQuestions, setLastExtractedQuestions] = useState<QuizQuestion[]>([]);
+  const [model, setModel] = useState<string>("openrouter/qwen/qwen2.5-vl-72b-instruct:free");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -43,14 +51,12 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   }, [messages]);
 
   useEffect(() => {
-    // Save API key to localStorage whenever it changes
     if (apiKey) {
       localStorage.setItem("openrouter_api_key", apiKey);
     }
   }, [apiKey]);
 
   useEffect(() => {
-    // Save language preference to localStorage
     localStorage.setItem("quiz_language", language);
   }, [language]);
 
@@ -105,7 +111,6 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     try {
       const chatHistory = [...messages, userMessage];
       
-      // Call OpenRouter API with the Qwen2.5 VL 72B model
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -113,6 +118,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
           "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
+          model: model,
           messages: chatHistory.map(msg => ({
             role: msg.role,
             content: msg.content
@@ -136,10 +142,10 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       const updatedMessages = [...messages, userMessage, assistantMessage];
       setMessages(updatedMessages);
       
-      // Extract questions after each AI response and store them
       const extractedQuestions = parseQuestionsFromMessages(updatedMessages);
       if (extractedQuestions.length > 0) {
         setLastExtractedQuestions(extractedQuestions);
+        console.log("Extracted questions:", extractedQuestions);
       }
     } catch (error) {
       console.error("Error communicating with AI:", error);
@@ -163,7 +169,6 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       return;
     }
     
-    // Use the latest extracted questions
     if (lastExtractedQuestions.length > 0) {
       toast({
         title: getLocalizedText("quizGenerated", language),
@@ -173,7 +178,6 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       
       onGenerateQuestions(lastExtractedQuestions);
     } else {
-      // If no questions were automatically extracted, try one more time
       const extractedQuestions = parseQuestionsFromMessages(messages);
       
       if (extractedQuestions.length > 0) {
@@ -195,71 +199,94 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     }
   };
 
-  // Helper function to try to extract quiz questions from the AI's responses
-  const parseQuestionsFromMessages = (messages: Message[]): any[] => {
+  const parseQuestionsFromMessages = (messages: Message[]): QuizQuestion[] => {
     const assistantMessages = messages.filter(m => m.role === "assistant");
-    const questions: any[] = [];
+    let questions: QuizQuestion[] = [];
     
-    // Very simple parsing logic - this could be improved with more sophisticated parsing
-    assistantMessages.forEach((message, index) => {
+    assistantMessages.forEach((message) => {
       const content = message.content;
       
-      // Look for patterns that might indicate multiple choice questions
-      // This is a very simple implementation
-      const mcQuestionMatches = content.match(/(\d+\.\s.*\?)\s*[A-D]\)\s*(.*)\s*[A-D]\)\s*(.*)\s*[A-D]\)\s*(.*)\s*[A-D]\)\s*(.*)/g);
+      const numberedQuestions = content.match(/(?:^|\n)(?:\d+\.|\d+\)|\(\d+\)|[١٢٣٤٥٦٧٨٩٠]+\.|\p{Nl}|\p{No})[^\n]+(?:\n[^\n\d١٢٣٤٥٦٧٨٩٠]+)+/gmu);
       
-      if (mcQuestionMatches) {
-        mcQuestionMatches.forEach(match => {
-          const questionMatch = match.match(/(\d+\.\s*)(.*?)(?=\s*A\))/s);
-          const optionsMatch = match.match(/A\)\s*(.*?)\s*B\)\s*(.*?)\s*C\)\s*(.*?)\s*D\)\s*(.*?)(?:\s|$)/s);
+      if (numberedQuestions && numberedQuestions.length > 0) {
+        numberedQuestions.forEach((questionBlock, index) => {
+          const lines = questionBlock.trim().split('\n');
+          const questionText = lines[0].replace(/^(?:\d+\.|\d+\)|\(\d+\)|[١٢٣٤٥٦٧٨٩٠]+\.|\p{Nl}|\p{No})\s*/u, '').trim();
           
-          if (questionMatch && optionsMatch) {
+          const optionLines = lines.slice(1);
+          const options: string[] = [];
+          
+          const optionMarkers = optionLines.filter(line => 
+            /^(?:[A-Da-d]\.|\([A-Da-d]\)|[A-Da-d]\)|\p{Lo}\.|\(\p{Lo}\)|\p{Lo}\))/.test(line.trim())
+          );
+          
+          if (optionMarkers.length >= 2) {
+            optionLines.forEach(line => {
+              const optionMatch = line.match(/^(?:[A-Da-d]\.|\([A-Da-d]\)|[A-Da-d]\)|\p{Lo}\.|\(\p{Lo}\)|\p{Lo}\))\s*(.+)/);
+              if (optionMatch) {
+                options.push(optionMatch[1].trim());
+              }
+            });
+            
+            if (options.length >= 2) {
+              questions.push({
+                id: `q${questions.length + 1}`,
+                type: "multiple-choice",
+                question: questionText,
+                options: options.length >= 4 ? options.slice(0, 4) : [...options, ...Array(4 - options.length).fill("")],
+                correctAnswer: 0
+              });
+            } else {
+              questions.push({
+                id: `q${questions.length + 1}`,
+                type: "multiple-choice",
+                question: questionText,
+                options: ["Option A", "Option B", "Option C", "Option D"],
+                correctAnswer: 0
+              });
+            }
+          } else if (/true|false|صح|خطأ|נכון|לא נכון|adevărat|fals/i.test(questionBlock)) {
             questions.push({
               id: `q${questions.length + 1}`,
-              type: "multiple-choice",
-              question: questionMatch[2].trim(),
-              options: [
-                optionsMatch[1].trim(),
-                optionsMatch[2].trim(), 
-                optionsMatch[3].trim(),
-                optionsMatch[4].trim()
-              ],
-              correctAnswer: 0 // Default to first option
+              type: "true-false",
+              question: questionText,
+              options: ["True", "False"],
+              correctAnswer: true
+            });
+          } else {
+            questions.push({
+              id: `q${questions.length + 1}`,
+              type: "fill-blank",
+              question: questionText,
+              options: [],
+              correctAnswer: ""
             });
           }
         });
       }
       
-      // Look for true/false questions
-      const tfQuestionMatches = content.match(/(\d+\.\s.*\?)\s*(?:True|False)/g);
-      
-      if (tfQuestionMatches) {
-        tfQuestionMatches.forEach(match => {
-          const questionMatch = match.match(/(\d+\.\s*)(.*?)(?=\s*True|False)/s);
-          
-          if (questionMatch) {
+      if (questions.length === 0) {
+        const questionMarkSplit = content.split(/\?[.\s]/);
+        questionMarkSplit.forEach((potentialQuestion, index) => {
+          if (potentialQuestion.trim().length > 10 && !potentialQuestion.includes('?')) {
             questions.push({
               id: `q${questions.length + 1}`,
-              type: "true-false",
-              question: questionMatch[2].trim(),
-              options: ["True", "False"],
-              correctAnswer: false // Default
+              type: "multiple-choice",
+              question: `${potentialQuestion.trim()}?`,
+              options: ["Option A", "Option B", "Option C", "Option D"],
+              correctAnswer: 0
             });
           }
         });
       }
     });
     
-    // If we couldn't extract any questions, provide at least one sample
-    if (questions.length === 0 && assistantMessages.length > 0) {
-      questions.push({
-        id: "q1",
-        type: "multiple-choice",
-        question: `Question about ${topic}?`,
-        options: ["Option A", "Option B", "Option C", "Option D"],
-        correctAnswer: 0
-      });
-    }
+    questions = questions.map((q, index) => ({
+      ...q,
+      id: `q${index + 1}`
+    }));
+    
+    console.log(`Extracted ${questions.length} questions`);
     
     return questions;
   };
@@ -294,7 +321,19 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     <Card className="flex flex-col h-full">
       <CardHeader>
         <CardTitle>{getLocalizedText("aiQuizCreator", language)}</CardTitle>
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center gap-2 mt-2">
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="px-2 py-1 text-sm rounded border border-input bg-background max-w-[300px]"
+          >
+            <option value="openrouter/qwen/qwen2.5-vl-72b-instruct:free">Qwen 2.5 VL 72B (Default)</option>
+            <option value="openrouter/anthropic/claude-3-opus:ultra">Claude 3 Opus</option>
+            <option value="openrouter/meta/llama-3-70b-instruct:free">Llama 3 70B</option>
+            <option value="openrouter/mistralai/mistral-large:latest">Mistral Large</option>
+            <option value="openrouter/google/gemini-1.5-pro:latest">Gemini 1.5 Pro</option>
+          </select>
+          
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
@@ -395,11 +434,10 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex justify-between space-x-2 w-full">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1"
                 onClick={handleReset}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -408,13 +446,18 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
               <Button
                 variant="default"
                 size="sm"
-                className="flex-1"
                 onClick={handleGenerateQuiz}
+                className="flex-1"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {getLocalizedText("createQuiz", language)}
               </Button>
             </div>
+            {lastExtractedQuestions.length > 0 && (
+              <div className="text-sm text-muted-foreground text-center pt-2">
+                {getLocalizedText("questionsReady", language).replace("{count}", lastExtractedQuestions.length.toString())}
+              </div>
+            )}
           </div>
         ) : null}
       </CardFooter>
@@ -422,7 +465,6 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   );
 };
 
-// Helper function to get localized text
 const getLocalizedText = (key: string, language: string): string => {
   const translations: Record<string, Record<string, string>> = {
     aiQuizCreator: {
@@ -459,7 +501,7 @@ const getLocalizedText = (key: string, language: string): string => {
       de: "Beginnen Sie mit der Eingabe eines Themas und chatten Sie dann mit der KI, um personalisierte Quizfragen zu erstellen.",
       ar: "ابدأ بإدخال موضوع، ثم تحدث مع الذكاء الاصطناعي لإنشاء أسئلة اختبار مخصصة.",
       ro: "Începeți prin introducerea unui subiect, apoi discutați cu AI pentru a crea întrebări personalizate de quiz.",
-      he: "התחל על ידי הזנת נושא, ואז שוחח עם הבינה המלאכותית ליצירת שאלות חידון מותאמות אישית."
+      he: "התחל על ידי הזן נושא, ואז שוחח עם הבינה המלאכותית ליצירת שאלות חידון מותאמות אישית."
     },
     enterTopicPlaceholder: {
       en: "Enter topic (e.g. World Geography, History, Science)",
@@ -549,7 +591,7 @@ const getLocalizedText = (key: string, language: string): string => {
       de: "Bitte geben Sie zuerst Ihren OpenRouter-API-Schlüssel ein",
       ar: "الرجاء إدخال مفتاح OpenRouter API الخاص بك أولاً",
       ro: "Vă rugăm să introduceți mai întâi cheia API OpenRouter",
-      he: "אנא הזן תחילה את מפתח ה-API של OpenRouter"
+      he: "אנא הזן תחילה את מפתח ה-API שלך ונסה שוב."
     },
     welcomeMessage: {
       en: "I'll help you create quiz questions about \"{topic}\". What kind of questions would you like to create? You can ask for multiple-choice, true/false, fill-in-the-blank, or other question types.",
@@ -648,7 +690,16 @@ const getLocalizedText = (key: string, language: string): string => {
       de: "Ihr OpenRouter-API-Schlüssel wurde gespeichert",
       ar: "تم حفظ مفتاح OpenRouter API الخاص بك",
       ro: "Cheia dvs. API OpenRouter a fost salvată",
-      he: "מפתח ה-API של OpenRouter שלך נשמר"
+      he: "מפתח ה-API שלך נשמר"
+    },
+    questionsReady: {
+      en: "Ready to create quiz with {count} questions",
+      es: "Listo para crear cuestionario con {count} preguntas",
+      fr: "Prêt à créer un quiz avec {count} questions",
+      de: "Bereit, Quiz mit {count} Fragen zu erstellen",
+      ar: "جاهز لإنشاء اختبار بـ {count} أسئلة",
+      ro: "Gata pentru a crea un quiz cu {count} întrebări",
+      he: "מוכן ליצור חידון עם {count} שאלות"
     }
   };
 

@@ -206,23 +206,23 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     assistantMessages.forEach((message) => {
       const content = message.content;
       
-      const numberedQuestions = content.match(/(?:^|\n)(?:\d+\.|\d+\)|\(\d+\)|[١٢٣٤٥٦٧٨٩٠]+\.|\p{Nl}|\p{No})[^\n]+(?:\n[^\n\d١٢٣٤٥٦٧٨٩٠]+)+/gmu);
+      const numberedQuestions = content.match(/(?:^|\n)(?:\d+\.|\d+\)|\(\d+\)|[١٢٣٤٥٦٧٨٩٠]+\.|\w+\.|\w+\)|\(\w+\))[^\n]+(?:\n[^\n\d١٢٣٤٥٦٧٨٩٠]+)+/gm);
       
       if (numberedQuestions && numberedQuestions.length > 0) {
         numberedQuestions.forEach((questionBlock, index) => {
           const lines = questionBlock.trim().split('\n');
-          const questionText = lines[0].replace(/^(?:\d+\.|\d+\)|\(\d+\)|[١٢٣٤٥٦٧٨٩٠]+\.|\p{Nl}|\p{No})\s*/u, '').trim();
+          const questionText = lines[0].replace(/^(?:\d+\.|\d+\)|\(\d+\)|[١٢٣٤٥٦٧٨٩٠]+\.|\w+\.|\w+\)|\(\w+\))\s*/m, '').trim();
           
           const optionLines = lines.slice(1);
           const options: string[] = [];
           
           const optionMarkers = optionLines.filter(line => 
-            /^(?:[A-Da-d]\.|\([A-Da-d]\)|[A-Da-d]\)|\p{Lo}\.|\(\p{Lo}\)|\p{Lo}\))/.test(line.trim())
+            /^(?:[A-Da-d]\.|\([A-Da-d]\)|[A-Da-d]\)|\w\.|\(\w\)|\w\))/.test(line.trim())
           );
           
           if (optionMarkers.length >= 2) {
             optionLines.forEach(line => {
-              const optionMatch = line.match(/^(?:[A-Da-d]\.|\([A-Da-d]\)|[A-Da-d]\)|\p{Lo}\.|\(\p{Lo}\)|\p{Lo}\))\s*(.+)/);
+              const optionMatch = line.match(/^(?:[A-Da-d]\.|\([A-Da-d]\)|[A-Da-d]\)|\w\.|\(\w\)|\w\))\s*(.+)/);
               if (optionMatch) {
                 options.push(optionMatch[1].trim());
               }

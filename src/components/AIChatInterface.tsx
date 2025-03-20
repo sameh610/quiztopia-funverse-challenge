@@ -40,7 +40,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     return localStorage.getItem("quiz_language") || "en";
   });
   const [lastExtractedQuestions, setLastExtractedQuestions] = useState<QuizQuestion[]>([]);
-  const [model, setModel] = useState<string>("openrouter/qwen/qwen2.5-vl-72b-instruct:free");
+  const [model, setModel] = useState<string>("mistralai/mistral-small-3.1-24b-instruct:free");
   const [apiError, setApiError] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -382,11 +382,11 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
             onChange={(e) => setModel(e.target.value)}
             className="px-2 py-1 text-sm rounded border border-input bg-background max-w-[300px]"
           >
-            <option value="openrouter/qwen/qwen2.5-vl-72b-instruct:free">Qwen 2.5 VL 72B (Default)</option>
-            <option value="openrouter/anthropic/claude-3-opus:ultra">Claude 3 Opus</option>
-            <option value="openrouter/meta/llama-3-70b-instruct:free">Llama 3 70B</option>
-            <option value="openrouter/mistralai/mistral-large:latest">Mistral Large</option>
-            <option value="openrouter/google/gemini-1.5-pro:latest">Gemini 1.5 Pro</option>
+            <option value="mistralai/mistral-small-3.1-24b-instruct:free">Mistral Small 24B (Default)</option>
+            <option value="anthropic/claude-3-opus:ultra">Claude 3 Opus</option>
+            <option value="meta/llama-3-70b-instruct:free">Llama 3 70B</option>
+            <option value="mistralai/mistral-large-latest">Mistral Large</option>
+            <option value="google/gemini-1.5-pro:latest">Gemini 1.5 Pro</option>
           </select>
           
           <select
@@ -708,7 +708,7 @@ const getLocalizedText = (key: string, language: string): string => {
     chatMore: {
       en: "Please chat with the AI a bit more to generate better quiz questions",
       es: "Por favor, chatea un poco más con la IA para generar mejores preguntas",
-      fr: "Veuillez discuter un peu plus avec l'IA pour générer de meilleures questions",
+      fr: "Veuillez discuter un poco plus avec l'IA pour générer de meilleures questions",
       de: "Bitte chatten Sie etwas mehr mit der KI, um bessere Quizfragen zu generieren",
       ar: "يرجى الدردشة مع الذكاء الاصطناعي قليلاً أكثر لإنشاء أسئلة اختبار أفضل",
       ro: "Vă rugăm să discutați mai mult cu AI pentru a genera întrebări de quiz mai bune",

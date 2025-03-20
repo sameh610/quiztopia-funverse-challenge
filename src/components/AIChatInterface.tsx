@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Bot, Plus, RefreshCw } from "lucide-react";
+import { Send, Bot, Plus, RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ApiKeyInput from "@/components/ApiKeyInput";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface Message {
   role: "user" | "assistant";
@@ -40,6 +41,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   });
   const [lastExtractedQuestions, setLastExtractedQuestions] = useState<QuizQuestion[]>([]);
   const [model, setModel] = useState<string>("openrouter/qwen/qwen2.5-vl-72b-instruct:free");
+  const [apiError, setApiError] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -79,6 +81,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       return;
     }
     
+    setApiError("");
     setChatStarted(true);
     
     const welcomeMessage = getLocalizedText("welcomeMessage", language)
@@ -103,6 +106,7 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       return;
     }
 
+    setApiError("");
     const userMessage: Message = { role: "user", content: inputMessage };
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
@@ -111,11 +115,16 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     try {
       const chatHistory = [...messages, userMessage];
       
+      console.log("Sending request to OpenRouter with model:", model);
+      console.log("API Key present:", apiKey ? "Yes" : "No");
+      
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "Quiz Creator"
         },
         body: JSON.stringify({
           model: model,
@@ -127,13 +136,15 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
         })
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API Error:", errorData);
-        throw new Error(`Failed to get response from AI: ${response.status} ${errorData?.error?.message || ""}`);
+        console.error("API Error:", data);
+        const errorMessage = data?.error?.message || `Error ${response.status}`;
+        setApiError(errorMessage);
+        throw new Error(`Failed to get response from AI: ${response.status} ${errorMessage}`);
       }
 
-      const data = await response.json();
       const assistantMessage: Message = { 
         role: "assistant", 
         content: data.choices[0].message.content 
@@ -307,14 +318,58 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     setTopic("");
     setChatStarted(false);
     setLastExtractedQuestions([]);
+    setApiError("");
   };
 
   const handleApiKeySet = (key: string) => {
     setApiKey(key);
+    setApiError("");
     toast({
       title: getLocalizedText("apiKeySaved", language),
       description: getLocalizedText("apiKeySavedDesc", language),
     });
+  };
+
+  const verifyApiKey = async () => {
+    if (!apiKey) {
+      setApiError(getLocalizedText("apiKeyRequired", language));
+      return;
+    }
+
+    setIsLoading(true);
+    setApiError("");
+    
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/auth/key", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "Quiz Creator - Key Verification"
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setApiError(data?.error?.message || getLocalizedText("invalidApiKey", language));
+        toast({
+          title: getLocalizedText("apiKeyInvalid", language),
+          description: getLocalizedText("pleaseCheckKey", language),
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: getLocalizedText("apiKeyValid", language),
+          description: getLocalizedText("keyVerified", language),
+        });
+      }
+    } catch (error) {
+      console.error("API key verification error:", error);
+      setApiError(getLocalizedText("verificationFailed", language));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -350,6 +405,16 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
         </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-auto mb-4">
+        {apiError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>{getLocalizedText("apiError", language)}</AlertTitle>
+            <AlertDescription>
+              {apiError}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {!apiKey ? (
           <div className="space-y-4">
             <div className="text-center p-6">
@@ -360,6 +425,12 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
               </p>
             </div>
             <ApiKeyInput onApiKeySet={handleApiKeySet} language={language} />
+            
+            <div className="text-center mt-6">
+              <Button variant="outline" size="sm" onClick={() => window.open("https://openrouter.ai/keys", "_blank")}>
+                {getLocalizedText("getApiKey", language)}
+              </Button>
+            </div>
           </div>
         ) : !chatStarted ? (
           <div className="space-y-4">
@@ -377,9 +448,14 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
                 placeholder={getLocalizedText("enterTopicPlaceholder", language)}
                 onKeyDown={handleKeyDown}
               />
-              <Button onClick={handleStartChat} className="w-full">
-                {getLocalizedText("startChat", language)}
-              </Button>
+              <div className="flex gap-2 w-full">
+                <Button onClick={handleStartChat} className="flex-1">
+                  {getLocalizedText("startChat", language)}
+                </Button>
+                <Button onClick={verifyApiKey} variant="outline" disabled={isLoading}>
+                  {getLocalizedText("verifyKey", language)}
+                </Button>
+              </div>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -591,7 +667,7 @@ const getLocalizedText = (key: string, language: string): string => {
       de: "Bitte geben Sie zuerst Ihren OpenRouter-API-Schlüssel ein",
       ar: "الرجاء إدخال مفتاح OpenRouter API الخاص بك أولاً",
       ro: "Vă rugăm să introduceți mai întâi cheia API OpenRouter",
-      he: "אנא הזן תחילה את מפתח ה-API שלך ונסה שוב."
+      he: "אנא ה��ן תחילה את מפתח ה-API שלך ונסה שוב."
     },
     welcomeMessage: {
       en: "I'll help you create quiz questions about \"{topic}\". What kind of questions would you like to create? You can ask for multiple-choice, true/false, fill-in-the-blank, or other question types.",
@@ -700,6 +776,87 @@ const getLocalizedText = (key: string, language: string): string => {
       ar: "جاهز لإنشاء اختبار بـ {count} أسئلة",
       ro: "Gata pentru a crea un quiz cu {count} întrebări",
       he: "מוכן ליצור חידון עם {count} שאלות"
+    },
+    apiError: {
+      en: "API Error",
+      es: "Error de API",
+      fr: "Erreur d'API",
+      de: "API-Fehler",
+      ar: "خطأ في واجهة برمجة التطبيقات",
+      ro: "Eroare API",
+      he: "שגיאת API"
+    },
+    invalidApiKey: {
+      en: "Invalid API key",
+      es: "Clave API inválida",
+      fr: "Clé API invalide",
+      de: "Ungültiger API-Schlüssel",
+      ar: "مفتاح API غير صالح",
+      ro: "Cheie API invalidă",
+      he: "מפתח API לא חוקי"
+    },
+    apiKeyInvalid: {
+      en: "API Key Invalid",
+      es: "Clave API Inválida",
+      fr: "Clé API Invalide",
+      de: "API-Schlüssel Ungültig",
+      ar: "مفتاح API غير صالح",
+      ro: "Cheie API Invalidă",
+      he: "מפתח API לא חוקי"
+    },
+    pleaseCheckKey: {
+      en: "Please check your API key and try again",
+      es: "Por favor revisa tu clave API e intenta de nuevo",
+      fr: "Veuillez vérifier votre clé API et réessayer",
+      de: "Bitte überprüfen Sie Ihren API-Schlüssel und versuchen Sie es erneut",
+      ar: "يرجى التحقق من مفتاح API الخاص بك والمحاولة مرة أخرى",
+      ro: "Vă rugăm să verificați cheia API și să încercați din nou",
+      he: "אנא בדוק את מפתח ה-API שלך ונסה שוב"
+    },
+    apiKeyValid: {
+      en: "API Key Valid",
+      es: "Clave API Válida",
+      fr: "Clé API Valide",
+      de: "API-Schlüssel Gültig",
+      ar: "مفتاح API صالح",
+      ro: "Cheie API Validă",
+      he: "מפתח API תקף"
+    },
+    keyVerified: {
+      en: "Your API key has been verified",
+      es: "Tu clave API ha sido verificada",
+      fr: "Votre clé API a été vérifiée",
+      de: "Ihr API-Schlüssel wurde verifiziert",
+      ar: "تم التحقق من مفتاح API الخاص بك",
+      ro: "Cheia dvs. API a fost verificată",
+      he: "מפתח ה-API שלך אומת"
+    },
+    verificationFailed: {
+      en: "Verification failed. Please check your connection and try again",
+      es: "Verificación fallida. Por favor revisa tu conexión e intenta de nuevo",
+      fr: "Échec de la vérification. Veuillez vérifier votre connexion et réessayer",
+      de: "Überprüfung fehlgeschlagen. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut",
+      ar: "فشل التحقق. يرجى التحقق من اتصالك والمحاولة مرة أخرى",
+      ro: "Verificarea a eșuat. Vă rugăm să verificați conexiunea și să încercați din nou",
+      he: "האימות נכשל. אנא בדוק את החיבור שלך ונסה שוב"
+    },
+    getApiKey: {
+      en: "Get OpenRouter API Key",
+      es: "Obtener Clave API de OpenRouter",
+      fr: "Obtenir une Clé API OpenRouter",
+      de: "OpenRouter-API-Schlüssel erhalten",
+      ar: "الحصول على مفتاح API من OpenRouter",
+      ro: "Obțineți Cheia API OpenRouter",
+      he: "קבל מפתח API של OpenRouter"
+    },
+    verifyKey: {
+      en: "Verify Key",
+      es: "Verificar Clave",
+      fr: "Vérifier la Clé",
+      de: "Schlüssel prüfen",
+      ar: "التحقق من المفتاح",
+      ro: "Verifică Cheia",
+      he: "אמת מפתח"
     }
   };
 

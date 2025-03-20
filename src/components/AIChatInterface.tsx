@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Bot, Plus, RefreshCw, AlertTriangle } from "lucide-react";
+import { Send, Bot, Plus, RefreshCw, AlertTriangle, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ApiKeyInput from "@/components/ApiKeyInput";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -26,6 +26,9 @@ interface QuizQuestion {
   image?: string;
 }
 
+// Fixed API key - do not expose to users in production
+const FIXED_API_KEY = "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";
+
 const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,9 +36,8 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [topic, setTopic] = useState("");
   const [chatStarted, setChatStarted] = useState(false);
-  const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem("openrouter_api_key") || "";
-  });
+  const [isPremium, setIsPremium] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [language, setLanguage] = useState<string>(() => {
     return localStorage.getItem("quiz_language") || "en";
   });
@@ -53,12 +55,6 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
   }, [messages]);
 
   useEffect(() => {
-    if (apiKey) {
-      localStorage.setItem("openrouter_api_key", apiKey);
-    }
-  }, [apiKey]);
-
-  useEffect(() => {
     localStorage.setItem("quiz_language", language);
   }, [language]);
 
@@ -67,15 +63,6 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       toast({
         title: getLocalizedText("pleaseEnterTopic", language),
         description: getLocalizedText("topicNeeded", language),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!apiKey) {
-      toast({
-        title: getLocalizedText("apiKeyRequired", language),
-        description: getLocalizedText("enterApiKey", language),
         variant: "destructive",
       });
       return;
@@ -95,16 +82,22 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     ]);
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
-    if (!apiKey) {
+  const handlePremiumModelSelect = (selectedModel: string) => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
       toast({
-        title: getLocalizedText("apiKeyRequired", language),
-        description: getLocalizedText("enterApiKey", language),
+        title: getLocalizedText("premiumRequired", language),
+        description: getLocalizedText("premiumRequiredDesc", language),
         variant: "destructive",
       });
       return;
     }
+    
+    setModel(selectedModel);
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
 
     setApiError("");
     const userMessage: Message = { role: "user", content: inputMessage };
@@ -116,13 +109,12 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       const chatHistory = [...messages, userMessage];
       
       console.log("Sending request to OpenRouter with model:", model);
-      console.log("API Key present:", apiKey ? "Yes" : "No");
       
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
+          "Authorization": `Bearer ${FIXED_API_KEY}`,
           "HTTP-Referer": window.location.origin,
           "X-Title": "Quiz Creator"
         },
@@ -208,6 +200,23 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
         });
       }
     }
+  };
+
+  const handleUpgradeToPremium = () => {
+    toast({
+      title: getLocalizedText("upgradingToPremium", language),
+      description: getLocalizedText("processingPayment", language),
+    });
+    
+    // Simulate payment processing
+    setTimeout(() => {
+      setIsPremium(true);
+      setShowPremiumModal(false);
+      toast({
+        title: getLocalizedText("premiumActivated", language),
+        description: getLocalizedText("enjoyPremiumFeatures", language),
+      });
+    }, 2000);
   };
 
   const parseQuestionsFromMessages = (messages: Message[]): QuizQuestion[] => {
@@ -321,51 +330,37 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
     setApiError("");
   };
 
-  const handleApiKeySet = (key: string) => {
-    setApiKey(key);
-    setApiError("");
-    toast({
-      title: getLocalizedText("apiKeySaved", language),
-      description: getLocalizedText("apiKeySavedDesc", language),
-    });
-  };
-
-  const verifyApiKey = async () => {
-    if (!apiKey) {
-      setApiError(getLocalizedText("apiKeyRequired", language));
-      return;
-    }
-
+  const verifyModelAvailability = async () => {
     setIsLoading(true);
     setApiError("");
     
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/auth/key", {
+      const response = await fetch("https://openrouter.ai/api/v1/models", {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
+          "Authorization": `Bearer ${FIXED_API_KEY}`,
           "HTTP-Referer": window.location.origin,
-          "X-Title": "Quiz Creator - Key Verification"
+          "X-Title": "Quiz Creator - Model Verification"
         }
       });
       
       const data = await response.json();
       
       if (!response.ok) {
-        setApiError(data?.error?.message || getLocalizedText("invalidApiKey", language));
+        setApiError(data?.error?.message || getLocalizedText("modelCheckFailed", language));
         toast({
-          title: getLocalizedText("apiKeyInvalid", language),
-          description: getLocalizedText("pleaseCheckKey", language),
+          title: getLocalizedText("modelCheckFailed", language),
+          description: getLocalizedText("tryAgainLater", language),
           variant: "destructive",
         });
       } else {
         toast({
-          title: getLocalizedText("apiKeyValid", language),
-          description: getLocalizedText("keyVerified", language),
+          title: getLocalizedText("modelsAvailable", language),
+          description: getLocalizedText("readyToUse", language),
         });
       }
     } catch (error) {
-      console.error("API key verification error:", error);
+      console.error("Model verification error:", error);
       setApiError(getLocalizedText("verificationFailed", language));
     } finally {
       setIsLoading(false);
@@ -379,14 +374,22 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
         <div className="flex justify-between items-center gap-2 mt-2">
           <select
             value={model}
-            onChange={(e) => setModel(e.target.value)}
+            onChange={(e) => {
+              const selectedModel = e.target.value;
+              if (selectedModel === "mistralai/mistral-small-3.1-24b-instruct:free") {
+                setModel(selectedModel);
+              } else {
+                handlePremiumModelSelect(selectedModel);
+              }
+            }}
             className="px-2 py-1 text-sm rounded border border-input bg-background max-w-[300px]"
           >
             <option value="mistralai/mistral-small-3.1-24b-instruct:free">Mistral Small 24B (Default)</option>
-            <option value="anthropic/claude-3-opus:ultra">Claude 3 Opus</option>
-            <option value="meta/llama-3-70b-instruct:free">Llama 3 70B</option>
-            <option value="mistralai/mistral-large-latest">Mistral Large</option>
-            <option value="google/gemini-1.5-pro:latest">Gemini 1.5 Pro</option>
+            <option value="openai/gpt-4o:free">{isPremium ? "GPT-4o" : "🔒 GPT-4o (Premium)"}</option>
+            <option value="anthropic/claude-3-opus:ultra">{isPremium ? "Claude 3 Opus" : "🔒 Claude 3 Opus (Premium)"}</option>
+            <option value="meta/llama-3-70b-instruct:free">{isPremium ? "Llama 3 70B" : "🔒 Llama 3 70B (Premium)"}</option>
+            <option value="mistralai/mistral-large-latest">{isPremium ? "Mistral Large" : "🔒 Mistral Large (Premium)"}</option>
+            <option value="google/gemini-1.5-pro:latest">{isPremium ? "Gemini 1.5 Pro" : "🔒 Gemini 1.5 Pro (Premium)"}</option>
           </select>
           
           <select
@@ -403,6 +406,20 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
             <option value="he">עברית</option>
           </select>
         </div>
+        
+        {!isPremium && (
+          <div className="mt-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="w-full flex items-center gap-2 bg-gradient-to-r from-violet-500 to-indigo-500 text-white hover:from-violet-600 hover:to-indigo-600 border-0"
+              onClick={() => setShowPremiumModal(true)}
+            >
+              <Lock className="h-4 w-4" />
+              {getLocalizedText("upgradeForPremiumModels", language)}
+            </Button>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="flex-grow overflow-auto mb-4">
         {apiError && (
@@ -415,24 +432,49 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
           </Alert>
         )}
         
-        {!apiKey ? (
-          <div className="space-y-4">
-            <div className="text-center p-6">
-              <Bot className="h-16 w-16 mx-auto mb-4 text-primary" />
-              <h3 className="text-xl font-semibold mb-2">{getLocalizedText("chatWithAI", language)}</h3>
-              <p className="text-muted-foreground mb-4">
-                {getLocalizedText("apiKeyNeeded", language)}
-              </p>
-            </div>
-            <ApiKeyInput onApiKeySet={handleApiKeySet} language={language} />
-            
-            <div className="text-center mt-6">
-              <Button variant="outline" size="sm" onClick={() => window.open("https://openrouter.ai/keys", "_blank")}>
-                {getLocalizedText("getApiKey", language)}
-              </Button>
+        {showPremiumModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-background p-6 rounded-lg max-w-md w-full">
+              <h3 className="text-xl font-semibold mb-4">{getLocalizedText("premiumUpgrade", language)}</h3>
+              <p className="mb-6">{getLocalizedText("premiumUpgradeDesc", language)}</p>
+              <div className="border rounded-lg p-4 mb-6">
+                <div className="font-medium text-lg mb-2">{getLocalizedText("premiumPlan", language)}</div>
+                <div className="text-2xl font-bold mb-2">$20/month</div>
+                <ul className="space-y-2">
+                  <li className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    {getLocalizedText("accessAllModels", language)}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    {getLocalizedText("unlimitedQuizzes", language)}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    {getLocalizedText("prioritySupport", language)}
+                  </li>
+                </ul>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1"
+                  onClick={handleUpgradeToPremium}
+                >
+                  {getLocalizedText("subscribe", language)}
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowPremiumModal(false)}
+                >
+                  {getLocalizedText("cancel", language)}
+                </Button>
+              </div>
             </div>
           </div>
-        ) : !chatStarted ? (
+        )}
+        
+        {!chatStarted ? (
           <div className="space-y-4">
             <div className="text-center p-6">
               <Bot className="h-16 w-16 mx-auto mb-4 text-primary" />
@@ -452,18 +494,10 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
                 <Button onClick={handleStartChat} className="flex-1">
                   {getLocalizedText("startChat", language)}
                 </Button>
-                <Button onClick={verifyApiKey} variant="outline" disabled={isLoading}>
-                  {getLocalizedText("verifyKey", language)}
+                <Button onClick={verifyModelAvailability} variant="outline" disabled={isLoading}>
+                  {getLocalizedText("checkAvailability", language)}
                 </Button>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-2"
-                onClick={() => setApiKey("")}
-              >
-                {getLocalizedText("resetApiKey", language)}
-              </Button>
             </div>
           </div>
         ) : (
@@ -667,7 +701,7 @@ const getLocalizedText = (key: string, language: string): string => {
       de: "Bitte geben Sie zuerst Ihren OpenRouter-API-Schlüssel ein",
       ar: "الرجاء إدخال مفتاح OpenRouter API الخاص بك أولاً",
       ro: "Vă rugăm să introduceți mai întâi cheia API OpenRouter",
-      he: "אנא ה��ן תחילה את מפתח ה-API שלך ונסה שוב."
+      he: "אנא הזן תחילה את מפתח ה-API שלך ונסה שוב."
     },
     welcomeMessage: {
       en: "I'll help you create quiz questions about \"{topic}\". What kind of questions would you like to create? You can ask for multiple-choice, true/false, fill-in-the-blank, or other question types.",
@@ -720,147 +754,4 @@ const getLocalizedText = (key: string, language: string): string => {
       fr: "Quiz Généré",
       de: "Quiz Erstellt",
       ar: "تم إنشاء الاختبار",
-      ro: "Quiz Generat",
-      he: "החידון נוצר"
-    },
-    createdQuestions: {
-      en: "Created {count} questions based on your conversation",
-      es: "Se crearon {count} preguntas basadas en tu conversación",
-      fr: "Création de {count} questions basées sur votre conversation",
-      de: "{count} Fragen wurden basierend auf Ihrem Gespräch erstellt",
-      ar: "تم إنشاء {count} أسئلة بناءً على محادثتك",
-      ro: "S-au creat {count} întrebări bazate pe conversația dvs",
-      he: "נוצרו {count} שאלות בהתבסס על השיחה שלך"
-    },
-    noQuestionsFound: {
-      en: "No questions found",
-      es: "No se encontraron preguntas",
-      fr: "Aucune question trouvée",
-      de: "Keine Fragen gefunden",
-      ar: "لم يتم العثور على أسئلة",
-      ro: "Nu s-au găsit întrebări",
-      he: "לא נמצאו שאלות"
-    },
-    couldntExtract: {
-      en: "Couldn't extract questions from the conversation. Try asking the AI to create some specific questions.",
-      es: "No se pudieron extraer preguntas de la conversación. Intenta pedirle a la IA que cree algunas preguntas específicas.",
-      fr: "Impossible d'extraire des questions de la conversation. Essayez de demander à l'IA de créer des questions spécifiques.",
-      de: "Aus dem Gespräch konnten keine Fragen extrahiert werden. Bitten Sie die KI, einige spezifische Fragen zu erstellen.",
-      ar: "تعذر استخراج الأسئلة من المحادثة. حاول أن تطلب من الذكاء الاصطناعي إنشاء بعض الأسئلة المحددة.",
-      ro: "Nu s-au putut extrage întrebări din conversație. Încercați să cereți AI-ului să creeze câteva întrebări specifice.",
-      he: "לא ניתן היה לחלץ שאלות מהשיחה. נסה לבקש מהבינה המלאכותית ליצור כמה שאלות ספציפיות."
-    },
-    apiKeySaved: {
-      en: "API Key Saved",
-      es: "Clave API Guardada",
-      fr: "Clé API Enregistrée",
-      de: "API-Schlüssel Gespeichert",
-      ar: "تم حفظ مفتاح API",
-      ro: "Cheie API Salvată",
-      he: "מפתח API נשמר"
-    },
-    apiKeySavedDesc: {
-      en: "Your OpenRouter API key has been saved",
-      es: "Tu clave API de OpenRouter ha sido guardada",
-      fr: "Votre clé API OpenRouter a été enregistrée",
-      de: "Ihr OpenRouter-API-Schlüssel wurde gespeichert",
-      ar: "تم حفظ مفتاح OpenRouter API الخاص بك",
-      ro: "Cheia dvs. API OpenRouter a fost salvată",
-      he: "מפתח ה-API שלך נשמר"
-    },
-    questionsReady: {
-      en: "Ready to create quiz with {count} questions",
-      es: "Listo para crear cuestionario con {count} preguntas",
-      fr: "Prêt à créer un quiz avec {count} questions",
-      de: "Bereit, Quiz mit {count} Fragen zu erstellen",
-      ar: "جاهز لإنشاء اختبار بـ {count} أسئلة",
-      ro: "Gata pentru a crea un quiz cu {count} întrebări",
-      he: "מוכן ליצור חידון עם {count} שאלות"
-    },
-    apiError: {
-      en: "API Error",
-      es: "Error de API",
-      fr: "Erreur d'API",
-      de: "API-Fehler",
-      ar: "خطأ في واجهة برمجة التطبيقات",
-      ro: "Eroare API",
-      he: "שגיאת API"
-    },
-    invalidApiKey: {
-      en: "Invalid API key",
-      es: "Clave API inválida",
-      fr: "Clé API invalide",
-      de: "Ungültiger API-Schlüssel",
-      ar: "مفتاح API غير صالح",
-      ro: "Cheie API invalidă",
-      he: "מפתח API לא חוקי"
-    },
-    apiKeyInvalid: {
-      en: "API Key Invalid",
-      es: "Clave API Inválida",
-      fr: "Clé API Invalide",
-      de: "API-Schlüssel Ungültig",
-      ar: "مفتاح API غير صالح",
-      ro: "Cheie API Invalidă",
-      he: "מפתח API לא חוקי"
-    },
-    pleaseCheckKey: {
-      en: "Please check your API key and try again",
-      es: "Por favor revisa tu clave API e intenta de nuevo",
-      fr: "Veuillez vérifier votre clé API et réessayer",
-      de: "Bitte überprüfen Sie Ihren API-Schlüssel und versuchen Sie es erneut",
-      ar: "يرجى التحقق من مفتاح API الخاص بك والمحاولة مرة أخرى",
-      ro: "Vă rugăm să verificați cheia API și să încercați din nou",
-      he: "אנא בדוק את מפתח ה-API שלך ונסה שוב"
-    },
-    apiKeyValid: {
-      en: "API Key Valid",
-      es: "Clave API Válida",
-      fr: "Clé API Valide",
-      de: "API-Schlüssel Gültig",
-      ar: "مفتاح API صالح",
-      ro: "Cheie API Validă",
-      he: "מפתח API תקף"
-    },
-    keyVerified: {
-      en: "Your API key has been verified",
-      es: "Tu clave API ha sido verificada",
-      fr: "Votre clé API a été vérifiée",
-      de: "Ihr API-Schlüssel wurde verifiziert",
-      ar: "تم التحقق من مفتاح API الخاص بك",
-      ro: "Cheia dvs. API a fost verificată",
-      he: "מפתח ה-API שלך אומת"
-    },
-    verificationFailed: {
-      en: "Verification failed. Please check your connection and try again",
-      es: "Verificación fallida. Por favor revisa tu conexión e intenta de nuevo",
-      fr: "Échec de la vérification. Veuillez vérifier votre connexion et réessayer",
-      de: "Überprüfung fehlgeschlagen. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut",
-      ar: "فشل التحقق. يرجى التحقق من اتصالك والمحاولة مرة أخرى",
-      ro: "Verificarea a eșuat. Vă rugăm să verificați conexiunea și să încercați din nou",
-      he: "האימות נכשל. אנא בדוק את החיבור שלך ונסה שוב"
-    },
-    getApiKey: {
-      en: "Get OpenRouter API Key",
-      es: "Obtener Clave API de OpenRouter",
-      fr: "Obtenir une Clé API OpenRouter",
-      de: "OpenRouter-API-Schlüssel erhalten",
-      ar: "الحصول على مفتاح API من OpenRouter",
-      ro: "Obțineți Cheia API OpenRouter",
-      he: "קבל מפתח API של OpenRouter"
-    },
-    verifyKey: {
-      en: "Verify Key",
-      es: "Verificar Clave",
-      fr: "Vérifier la Clé",
-      de: "Schlüssel prüfen",
-      ar: "التحقق من المفتاح",
-      ro: "Verifică Cheia",
-      he: "אמת מפתח"
-    }
-  };
-
-  return translations[key]?.[language] || translations[key]?.["en"] || key;
-};
-
-export default AIChatInterface;
+      ro: "

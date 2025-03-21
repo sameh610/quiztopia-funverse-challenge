@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -15,32 +15,22 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@clerk/clerk-react";
+import { SignOutButton, UserButton } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 
 const Navbar = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { isLoggedIn, login, logout, user } = useAuth();
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
-  const handleLogin = () => {
-    login();
-    toast({
-      title: "Welcome back!",
-      description: "You've successfully logged in.",
-    });
-  };
-
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "Logged out",
-      description: "You've been logged out successfully.",
-    });
-    navigate("/");
+  const handleLoginClick = () => {
+    navigate("/login");
   };
 
   const renderMobileMenu = () => (
@@ -66,34 +56,31 @@ const Navbar = () => {
             <Gamepad className="h-5 w-5" />
             <span>Games</span>
           </Link>
-          <Link to="/leaderboards" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
-            <Trophy className="h-5 w-5" />
-            <span>Leaderboards</span>
-          </Link>
-          <Link to="/create" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
-            <Plus className="h-5 w-5" />
-            <span>Create Quiz</span>
-          </Link>
-          {isLoggedIn ? (
+          
+          {isSignedIn ? (
             <>
+              <Link to="/leaderboards" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
+                <Trophy className="h-5 w-5" />
+                <span>Leaderboards</span>
+              </Link>
+              <Link to="/create" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
+                <Plus className="h-5 w-5" />
+                <span>Create Quiz</span>
+              </Link>
               <Link to="/profile" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
                 <User className="h-5 w-5" />
                 <span>Profile</span>
               </Link>
-              <div 
-                className="nav-link flex items-center space-x-2 cursor-pointer" 
-                onClick={() => {
-                  handleLogout();
-                  toggleMenu();
-                }}
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
-              </div>
+              <SignOutButton>
+                <div className="nav-link flex items-center space-x-2 cursor-pointer">
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
+                </div>
+              </SignOutButton>
             </>
           ) : (
             <div className="nav-link flex items-center space-x-2 cursor-pointer" onClick={() => {
-              handleLogin();
+              handleLoginClick();
               toggleMenu();
             }}>
               <LogIn className="h-5 w-5" />
@@ -124,27 +111,17 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/games" className="nav-link">Games</Link>
-            <Link to="/leaderboards" className="nav-link">Leaderboards</Link>
-            <Link to="/create" className="nav-link">Create Quiz</Link>
             
-            {isLoggedIn ? (
-              <div className="flex items-center gap-3">
-                <Link to="/profile" className="avatar flex h-10 w-10 items-center justify-center rounded-full bg-quiztopia-primary text-white">
-                  <span className="text-sm font-semibold">{user?.initials}</span>
-                </Link>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleLogout} 
-                  className="flex items-center gap-1"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </Button>
-              </div>
+            {isSignedIn ? (
+              <>
+                <Link to="/leaderboards" className="nav-link">Leaderboards</Link>
+                <Link to="/create" className="nav-link">Create Quiz</Link>
+                <Link to="/profile" className="nav-link">Profile</Link>
+                <UserButton afterSignOutUrl="/" />
+              </>
             ) : (
               <Button 
-                onClick={handleLogin}
+                onClick={handleLoginClick}
                 className="rounded-full bg-gradient-to-r from-quiztopia-primary to-quiztopia-accent"
               >
                 Login

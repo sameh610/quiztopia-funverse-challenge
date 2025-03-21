@@ -5,8 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send, Bot, Plus, RefreshCw, AlertTriangle, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import ApiKeyInput from "@/components/ApiKeyInput";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import ApiKeyInput from "@/components/ApiKeyInput";
 
 interface Message {
   role: "user" | "assistant";

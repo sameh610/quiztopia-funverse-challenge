@@ -35,7 +35,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AIChatInterface from "@/components/AIChatInterface";
-import ApiKeyInput from "@/components/ApiKeyInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface QuizQuestion {
@@ -69,7 +68,6 @@ const CreateQuiz = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
   // AI integration
-  const [apiKey, setApiKey] = useState("");
   const [aiMode, setAiMode] = useState<'chat' | 'generate'>('generate');
   
   // Add a new question
@@ -504,20 +502,6 @@ const CreateQuiz = () => {
               
               <TabsContent value="ai-chat">
                 <div className="space-y-4">
-                  {!apiKey && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>OpenRouter API Key</CardTitle>
-                        <CardDescription>
-                          To use the AI chat feature, you need an OpenRouter API key
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ApiKeyInput onApiKeySet={setApiKey} />
-                      </CardContent>
-                    </Card>
-                  )}
-                  
                   <AIChatInterface onGenerateQuestions={handleAIGeneratedQuestions} />
                 </div>
               </TabsContent>
@@ -592,27 +576,6 @@ const CreateQuiz = () => {
                 </ul>
               </CardContent>
             </Card>
-            
-            {apiKey && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>AI Integration</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    You can use the Qwen AI model to help you create quiz questions by chatting with it.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setApiKey("")}
-                  >
-                    Reset API Key
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </main>

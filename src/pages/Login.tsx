@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const Login = () => {
+  const [errorMessage, setErrorMessage] = useState("");
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -17,7 +19,20 @@ const Login = () => {
           </p>
           
           <div className="rounded-lg border bg-card p-6 shadow-sm">
-            <SignIn />
+            {errorMessage && (
+              <div className="mb-4 rounded-md bg-red-50 p-4 text-red-800">
+                <p>{errorMessage}</p>
+              </div>
+            )}
+            <SignIn 
+              appearance={{
+                elements: {
+                  formButtonPrimary: 'bg-quiztopia-primary hover:bg-quiztopia-primary/90',
+                  footerActionLink: 'text-quiztopia-primary',
+                  card: 'shadow-none bg-transparent'
+                }
+              }}
+            />
           </div>
         </div>
       </main>

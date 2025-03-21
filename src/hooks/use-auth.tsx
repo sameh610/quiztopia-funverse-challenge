@@ -27,11 +27,11 @@ export const useAuth = (): AuthContextType => {
   const user: User | null = isLoaded && isSignedIn && clerkUser
     ? {
         id: clerkUser.id,
-        name: `${clerkUser.firstName} ${clerkUser.lastName}`.trim() || clerkUser.username || 'User',
+        name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'User',
         email: clerkUser.primaryEmailAddress?.emailAddress || '',
-        initials: getInitials(`${clerkUser.firstName} ${clerkUser.lastName}`.trim() || clerkUser.username || 'User'),
+        initials: getInitials(`${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'User'),
         avatar: clerkUser.imageUrl,
-        points: parseInt(clerkUser.publicMetadata.points as string || '0')
+        points: parseInt(clerkUser.publicMetadata?.points as string || '0')
       }
     : null;
 

@@ -1,10 +1,20 @@
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/hooks/use-auth";
 import { User, Award, Clock, BookOpen, Trophy, Plus, Users, Gamepad } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Navigate } from "react-router-dom";
 
 const Profile = () => {
+  const { isLoggedIn, user } = useAuth();
+
+  // Redirect to home if not logged in
+  if (!isLoggedIn || !user) {
+    return <Navigate to="/" />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -13,11 +23,11 @@ const Profile = () => {
         <div className="mb-8">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-quiztopia-primary text-2xl font-bold text-white">
-              JD
+              {user.initials}
             </div>
             <div>
-              <h1 className="text-3xl font-bold">John Doe</h1>
-              <p className="text-muted-foreground">Quiz Master • Joined 2023</p>
+              <h1 className="text-3xl font-bold">{user.name}</h1>
+              <p className="text-muted-foreground">Quiz Master • {user.email}</p>
             </div>
           </div>
         </div>
@@ -29,8 +39,8 @@ const Profile = () => {
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12,345</div>
-              <p className="text-xs text-muted-foreground">+520 points this week</p>
+              <div className="text-2xl font-bold">{user.points.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Keep playing to earn more points!</p>
             </CardContent>
           </Card>
           

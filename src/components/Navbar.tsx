@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Trophy, 
@@ -10,25 +10,37 @@ import {
   User, 
   LogIn, 
   Menu, 
-  X 
+  X,
+  LogOut
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 
 const Navbar = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const { isLoggedIn, login, logout, user } = useAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
   const handleLogin = () => {
-    setIsLoggedIn(true);
+    login();
     toast({
       title: "Welcome back!",
       description: "You've successfully logged in.",
     });
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged out",
+      description: "You've been logged out successfully.",
+    });
+    navigate("/");
   };
 
   const renderMobileMenu = () => (
@@ -63,12 +75,24 @@ const Navbar = () => {
             <span>Create Quiz</span>
           </Link>
           {isLoggedIn ? (
-            <Link to="/profile" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
-              <User className="h-5 w-5" />
-              <span>Profile</span>
-            </Link>
+            <>
+              <Link to="/profile" className="nav-link flex items-center space-x-2" onClick={toggleMenu}>
+                <User className="h-5 w-5" />
+                <span>Profile</span>
+              </Link>
+              <div 
+                className="nav-link flex items-center space-x-2 cursor-pointer" 
+                onClick={() => {
+                  handleLogout();
+                  toggleMenu();
+                }}
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </div>
+            </>
           ) : (
-            <div className="nav-link flex items-center space-x-2" onClick={() => {
+            <div className="nav-link flex items-center space-x-2 cursor-pointer" onClick={() => {
               handleLogin();
               toggleMenu();
             }}>
@@ -104,8 +128,19 @@ const Navbar = () => {
             <Link to="/create" className="nav-link">Create Quiz</Link>
             
             {isLoggedIn ? (
-              <div className="avatar">
-                <span className="text-sm font-semibold">JD</span>
+              <div className="flex items-center gap-3">
+                <Link to="/profile" className="avatar flex h-10 w-10 items-center justify-center rounded-full bg-quiztopia-primary text-white">
+                  <span className="text-sm font-semibold">{user?.initials}</span>
+                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLogout} 
+                  className="flex items-center gap-1"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
               </div>
             ) : (
               <Button 

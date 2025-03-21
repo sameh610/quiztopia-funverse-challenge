@@ -1,7 +1,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Info, Lock } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -15,6 +15,10 @@ const alertVariants = cva(
           "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
         premium: 
           "border-violet-500/50 text-violet-700 dark:text-violet-300 dark:border-violet-500 [&>svg]:text-violet-500",
+        locked:
+          "border-amber-500/50 text-amber-700 dark:text-amber-300 dark:border-amber-500 [&>svg]:text-amber-500",
+        info:
+          "border-blue-500/50 text-blue-700 dark:text-blue-300 dark:border-blue-500 [&>svg]:text-blue-500",
       },
     },
     defaultVariants: {
@@ -60,4 +64,20 @@ const AlertDescription = React.forwardRef<
 ))
 AlertDescription.displayName = "AlertDescription"
 
-export { Alert, AlertTitle, AlertDescription }
+const AlertLocked = ({ title, description }: { title: string, description: string }) => (
+  <Alert variant="locked">
+    <Lock className="h-4 w-4" />
+    <AlertTitle>{title}</AlertTitle>
+    <AlertDescription>{description}</AlertDescription>
+  </Alert>
+)
+
+const AlertInfo = ({ title, description }: { title: string, description: string }) => (
+  <Alert variant="info">
+    <Info className="h-4 w-4" />
+    <AlertTitle>{title}</AlertTitle>
+    <AlertDescription>{description}</AlertDescription>
+  </Alert>
+)
+
+export { Alert, AlertTitle, AlertDescription, AlertLocked, AlertInfo }

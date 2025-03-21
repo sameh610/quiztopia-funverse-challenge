@@ -47,7 +47,7 @@ export const useAuth = (): AuthContextType => {
   };
 
   return {
-    isLoggedIn: isLoaded && isSignedIn,
+    isLoggedIn: isLoaded && !!isSignedIn,
     user,
     updatePoints
   };

@@ -26,7 +26,6 @@ interface QuizQuestion {
   image?: string;
 }
 
-// Fixed API key - do not expose to users in production
 const FIXED_API_KEY = "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";
 
 const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
@@ -208,7 +207,6 @@ const AIChatInterface = ({ onGenerateQuestions }: AIChatInterfaceProps) => {
       description: getLocalizedText("processingPayment", language),
     });
     
-    // Simulate payment processing
     setTimeout(() => {
       setIsPremium(true);
       setShowPremiumModal(false);
@@ -728,7 +726,7 @@ const getLocalizedText = (key: string, language: string): string => {
       de: "Kommunikation mit der KI fehlgeschlagen. Bitte überprüfen Sie Ihren API-Schlüssel und versuchen Sie es erneut.",
       ar: "فشل في التواصل مع الذكاء الاصطناعي. يرجى التحقق من مفتاح API الخاص بك والمحاولة مرة أخرى.",
       ro: "Comunicarea cu AI a eșuat. Vă rugăm să verificați cheia API și să încercați din nou.",
-      he: "נכשל בתקשורת עם הבינה המלאכותית. אנא בדוק את מפתח ה-API שלך ונסה שוב."
+      he: "נכשל בתקשורת עם הבינה המלאכותית. אנא בדוק את ��פתח ה-API שלך ונסה שוב."
     },
     moreConversationNeeded: {
       en: "More conversation needed",
@@ -754,4 +752,246 @@ const getLocalizedText = (key: string, language: string): string => {
       fr: "Quiz Généré",
       de: "Quiz Erstellt",
       ar: "تم إنشاء الاختبار",
-      ro: "
+      ro: "Quiz generat",
+      he: "החידון נוצר"
+    },
+    createdQuestions: {
+      en: "Successfully created {count} questions",
+      es: "Se crearon {count} preguntas exitosamente",
+      fr: "Création réussie de {count} questions",
+      de: "Erfolgreich {count} Fragen erstellt",
+      ar: "تم إنشاء {count} أسئلة بنجاح",
+      ro: "S-au creat cu succes {count} întrebări",
+      he: "נוצרו {count} שאלות בהצלחה"
+    },
+    noQuestionsFound: {
+      en: "No questions found",
+      es: "No se encontraron preguntas",
+      fr: "Aucune question trouvée",
+      de: "Keine Fragen gefunden",
+      ar: "لم يتم العثور على أسئلة",
+      ro: "Nu s-au găsit întrebări",
+      he: "לא נמצאו שאלות"
+    },
+    couldntExtract: {
+      en: "Couldn't extract questions from the conversation",
+      es: "No se pudieron extraer preguntas de la conversación",
+      fr: "Impossible d'extraire des questions de la conversation",
+      de: "Fragen konnten nicht aus dem Gespräch extrahiert werden",
+      ar: "تعذر استخراج الأسئلة من المحادثة",
+      ro: "Nu s-au putut extrage întrebări din conversație",
+      he: "לא ניתן לחלץ שאלות מהשיחה"
+    },
+    premiumRequired: {
+      en: "Premium Required",
+      es: "Premium Requerido",
+      fr: "Premium Requis",
+      de: "Premium Erforderlich",
+      ar: "مطلوب اشتراك مميز",
+      ro: "Necesită Premium",
+      he: "נדרש פרימיום"
+    },
+    premiumRequiredDesc: {
+      en: "This model requires a premium subscription",
+      es: "Este modelo requiere una suscripción premium",
+      fr: "Ce modèle nécessite un abonnement premium",
+      de: "Dieses Modell erfordert ein Premium-Abonnement",
+      ar: "يتطلب هذا النموذج اشتراكًا مميزًا",
+      ro: "Acest model necesită un abonament premium",
+      he: "מודל זה דורש מנוי פרימיום"
+    },
+    upgradingToPremium: {
+      en: "Upgrading to Premium",
+      es: "Actualizando a Premium",
+      fr: "Mise à niveau vers Premium",
+      de: "Upgrade auf Premium",
+      ar: "الترقية إلى مميز",
+      ro: "Actualizare la Premium",
+      he: "שדרוג לפרימיום"
+    },
+    processingPayment: {
+      en: "Processing your payment...",
+      es: "Procesando tu pago...",
+      fr: "Traitement de votre paiement...",
+      de: "Verarbeitung Ihrer Zahlung...",
+      ar: "جاري معالجة الدفع الخاص بك...",
+      ro: "Se procesează plata...",
+      he: "מעבד את התשלום שלך..."
+    },
+    premiumActivated: {
+      en: "Premium Activated",
+      es: "Premium Activado",
+      fr: "Premium Activé",
+      de: "Premium Aktiviert",
+      ar: "تم تفعيل الاشتراك المميز",
+      ro: "Premium Activat",
+      he: "פרימיום הופעל"
+    },
+    enjoyPremiumFeatures: {
+      en: "Enjoy premium features and models!",
+      es: "¡Disfruta de características y modelos premium!",
+      fr: "Profitez des fonctionnalités et modèles premium !",
+      de: "Genießen Sie Premium-Funktionen und -Modelle!",
+      ar: "استمتع بالميزات والنماذج المميزة!",
+      ro: "Bucurați-vă de funcții și modele premium!",
+      he: "תהנה מתכונות ומודלים פרימיום!"
+    },
+    apiError: {
+      en: "API Error",
+      es: "Error de API",
+      fr: "Erreur d'API",
+      de: "API-Fehler",
+      ar: "خطأ في واجهة برمجة التطبيقات",
+      ro: "Eroare API",
+      he: "שגיאת API"
+    },
+    upgradeForPremiumModels: {
+      en: "Upgrade for Premium Models",
+      es: "Actualiza para Modelos Premium",
+      fr: "Mise à niveau pour les modèles Premium",
+      de: "Upgrade für Premium-Modelle",
+      ar: "الترقية للحصول على النماذج المميزة",
+      ro: "Actualizați pentru modele Premium",
+      he: "שדרג למודלים פרימיום"
+    },
+    premiumUpgrade: {
+      en: "Premium Upgrade",
+      es: "Actualización Premium",
+      fr: "Mise à niveau Premium",
+      de: "Premium-Upgrade",
+      ar: "الترقية إلى الاشتراك المميز",
+      ro: "Upgrade la Premium",
+      he: "שדרוג לפרימיום"
+    },
+    premiumUpgradeDesc: {
+      en: "Unlock access to all models and premium features with a monthly subscription",
+      es: "Desbloquea acceso a todos los modelos y características premium con una suscripción mensual",
+      fr: "Débloquez l'accès à tous les modèles et fonctionnalités premium avec un abonnement mensuel",
+      de: "Schalten Sie mit einem monatlichen Abonnement Zugriff auf alle Modelle und Premium-Funktionen frei",
+      ar: "افتح الوصول إلى جميع النماذج والميزات المميزة مع اشتراك شهري",
+      ro: "Deblocați accesul la toate modelele și funcțiile premium cu un abonament lunar",
+      he: "שחרר גישה לכל המודלים ותכונות הפרימיום עם מנוי חודשי"
+    },
+    premiumPlan: {
+      en: "Premium Plan",
+      es: "Plan Premium",
+      fr: "Plan Premium",
+      de: "Premium-Plan",
+      ar: "خطة مميزة",
+      ro: "Plan Premium",
+      he: "תוכנית פרימיום"
+    },
+    accessAllModels: {
+      en: "Access to all AI models",
+      es: "Acceso a todos los modelos de IA",
+      fr: "Accès à tous les modèles d'IA",
+      de: "Zugriff auf alle KI-Modelle",
+      ar: "الوصول إلى جميع نماذج الذكاء الاصطناعي",
+      ro: "Acces la toate modelele AI",
+      he: "גישה לכל מודלי הבינה המלאכותית"
+    },
+    unlimitedQuizzes: {
+      en: "Unlimited quizzes",
+      es: "Cuestionarios ilimitados",
+      fr: "Quiz illimités",
+      de: "Unbegrenzte Quizze",
+      ar: "اختبارات غير محدودة",
+      ro: "Quiz-uri nelimitate",
+      he: "חידונים ללא הגבלה"
+    },
+    prioritySupport: {
+      en: "Priority support",
+      es: "Soporte prioritario",
+      fr: "Support prioritaire",
+      de: "Vorrangiger Support",
+      ar: "دعم ذو أولوية",
+      ro: "Suport prioritar",
+      he: "תמיכה בעדיפות"
+    },
+    subscribe: {
+      en: "Subscribe Now",
+      es: "Suscribirse Ahora",
+      fr: "S'abonner Maintenant",
+      de: "Jetzt Abonnieren",
+      ar: "اشترك الآن",
+      ro: "Abonează-te Acum",
+      he: "הירשם עכשיו"
+    },
+    cancel: {
+      en: "Cancel",
+      es: "Cancelar",
+      fr: "Annuler",
+      de: "Abbrechen",
+      ar: "إلغاء",
+      ro: "Anulare",
+      he: "ביטול"
+    },
+    modelCheckFailed: {
+      en: "Model check failed",
+      es: "Verificación de modelo fallida",
+      fr: "Échec de la vérification du modèle",
+      de: "Modellprüfung fehlgeschlagen",
+      ar: "فشل التحقق من النموذج",
+      ro: "Verificarea modelului a eșuat",
+      he: "בדיקת המודל נכשלה"
+    },
+    tryAgainLater: {
+      en: "Please try again later",
+      es: "Por favor intenta más tarde",
+      fr: "Veuillez réessayer plus tard",
+      de: "Bitte versuchen Sie es später noch einmal",
+      ar: "يرجى المحاولة مرة أخرى لاحقًا",
+      ro: "Vă rugăm încercați din nou mai târziu",
+      he: "אנא נסה שוב מאוחר יותר"
+    },
+    modelsAvailable: {
+      en: "Models available",
+      es: "Modelos disponibles",
+      fr: "Modèles disponibles",
+      de: "Modelle verfügbar",
+      ar: "النماذج متاحة",
+      ro: "Modele disponibile",
+      he: "מודלים זמינים"
+    },
+    readyToUse: {
+      en: "API connection established and ready to use",
+      es: "Conexión API establecida y lista para usar",
+      fr: "Connexion API établie et prête à l'emploi",
+      de: "API-Verbindung hergestellt und einsatzbereit",
+      ar: "تم إنشاء اتصال API وجاهز للاستخدام",
+      ro: "Conexiunea API stabilită și gata de utilizare",
+      he: "חיבור ה-API נוצר ומוכן לשימוש"
+    },
+    checkAvailability: {
+      en: "Check Availability",
+      es: "Verificar Disponibilidad",
+      fr: "Vérifier la Disponibilité",
+      de: "Verfügbarkeit prüfen",
+      ar: "تحقق من التوفر",
+      ro: "Verificați Disponibilitatea",
+      he: "בדוק זמינות"
+    },
+    verificationFailed: {
+      en: "Verification failed",
+      es: "Verificación fallida",
+      fr: "Échec de la vérification",
+      de: "Überprüfung fehlgeschlagen",
+      ar: "فشل التحقق",
+      ro: "Verificare eșuată",
+      he: "האימות נכשל"
+    },
+    questionsReady: {
+      en: "Ready to create quiz with {count} questions",
+      es: "Listo para crear cuestionario con {count} preguntas",
+      fr: "Prêt à créer un quiz avec {count} questions",
+      de: "Bereit zum Erstellen eines Quiz mit {count} Fragen",
+      ar: "جاهز لإنشاء اختبار بـ {count} أسئلة",
+      ro: "Gata pentru a crea un quiz cu {count} întrebări",
+      he: "מוכן ליצור חידון עם {count} שאלות"
+    }
+  };
+
+  return translations[key]?.[language] || translations[key]?.['en'] || key;
+};
+
+export default AIChatInterface;

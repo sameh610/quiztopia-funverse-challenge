@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ClerkProvider, ClerkLoaded, ClerkLoading } from "@clerk/clerk-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Games from "./pages/Games";
 import CreateQuiz from "./pages/CreateQuiz";
@@ -22,6 +22,19 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [authError, setAuthError] = useState(false);
+
+  // Setup a global error handler for Clerk
+  useEffect(() => {
+    const handleClerkError = (e: Event) => {
+      if (e instanceof ErrorEvent && e.message?.includes('@clerk')) {
+        setAuthError(true);
+        console.error('Clerk authentication error:', e.message);
+      }
+    };
+
+    window.addEventListener('error', handleClerkError);
+    return () => window.removeEventListener('error', handleClerkError);
+  }, []);
 
   // Routes that can be accessed without authentication
   const AppRoutes = () => (
@@ -50,7 +63,6 @@ const App = () => {
             signUpUrl="/login"
             afterSignInUrl="/"
             afterSignUpUrl="/"
-            onError={() => setAuthError(true)}
           >
             <ClerkLoading>
               {/* Show a loading state while Clerk is initializing */}

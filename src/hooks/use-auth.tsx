@@ -1,5 +1,4 @@
 
-import { useAuth as useClerkAuth, useUser } from "@clerk/clerk-react";
 import { useToast } from './use-toast';
 
 // Define user type
@@ -18,28 +17,23 @@ export interface AuthContextType {
   updatePoints: (points: number) => void;
 }
 
+// Demo user for when authentication is disabled
+const demoUser: User = {
+  id: 'demo-user-123',
+  name: 'Demo User',
+  email: 'demo@example.com',
+  initials: 'DU',
+  points: 100
+};
+
 export const useAuth = (): AuthContextType => {
-  const { isLoaded, isSignedIn } = useClerkAuth();
-  const { user: clerkUser } = useUser();
   const { toast } = useToast();
   
-  // Convert clerk user to our app's user format
-  const user: User | null = isLoaded && isSignedIn && clerkUser
-    ? {
-        id: clerkUser.id,
-        name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'User',
-        email: clerkUser.primaryEmailAddress?.emailAddress || '',
-        initials: getInitials(`${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || 'User'),
-        avatar: clerkUser.imageUrl,
-        points: parseInt(clerkUser.publicMetadata?.points as string || '0')
-      }
-    : null;
+  // Since Clerk is not properly configured, use demo mode
+  const user = demoUser;
 
   const updatePoints = (points: number) => {
-    if (!user) return;
-    
-    // In a real implementation, this would update Clerk user metadata
-    // For this demo, we'll just show the toast
+    // For demo purposes, show toast but don't update any persistent state
     toast({
       title: `+${points} points!`,
       description: `You now have ${user.points + points} total points.`,
@@ -47,7 +41,7 @@ export const useAuth = (): AuthContextType => {
   };
 
   return {
-    isLoggedIn: isLoaded && !!isSignedIn,
+    isLoggedIn: true, // Always logged in for demo mode
     user,
     updatePoints
   };
